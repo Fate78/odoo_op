@@ -33,10 +33,11 @@
         'views/op.workpackage_view.xml',
         'views/op.time_entries_view.xml',
         'views/project_activity_view.xml',
+        'wizard/sync_wizard_view.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
-        'demo/demo.xml',
+        'demo/sync_wizard_view.xml',
     ],
     'installable': True,
     'application': True,

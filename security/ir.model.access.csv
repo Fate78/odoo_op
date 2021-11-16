@@ -5,3 +5,4 @@ openproject.access_op_activity,access_op_activity,openproject.model_op_activity,
 openproject.access_op_work_package,access_op_work_package,openproject.model_op_work_package,base.group_user,1,1,1,1
 openproject.access_op_time_entry,access_op_time_entry,openproject.model_op_time_entry,base.group_user,1,1,1,1
 openproject.access_op_project_activity,access_op_project_activity,openproject.model_op_project_activity,base.group_user,1,1,1,1
+openproject.access_sync_wizard,access_sync_wizard,openproject.model_sync_wizard,base.group_user,1,1,1,1
