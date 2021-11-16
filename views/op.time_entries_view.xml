@@ -1,0 +1,47 @@
+<odoo>
+  <data>
+    <record id="view_time_entry_form" model="ir.ui.view">
+      <field name="name">op.time_entry.form</field>
+      <field name="model">op.time.entry</field>
+      <field name="arch" type="xml">
+        <form>
+          <sheet>
+            <group>
+              <group>
+                <field name="name" />
+                <field name="op_hours" />
+                <field name="op_spent_on" />
+              </group>
+              <group></group>
+            </group>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+    <record id="view_time_entry_tree" model="ir.ui.view">
+      <field name="name">op.time_entry.tree</field>
+      <field name="model">op.time.entry</field>
+      <field name="arch" type="xml">
+        <tree>
+          <field name="name" />
+          <field name="op_hours" />
+          <field name="op_spent_on" />
+        </tree>
+      </field>
+    </record>
+
+    <record id="op_time_entry_action" model="ir.actions.act_window">
+      <field name="name">OpenProject.time_entry</field>
+      <field name="type">ir.actions.act_window</field>
+      <field name="res_model">op.time.entry</field>
+      <field name="view_mode">tree,kanban,form</field>
+      <field name="help" type="html">
+        <p class="o_view_nocontent_smiling_face">
+        Create a new time entry
+      </p>
+      </field>
+    </record>
+    <menuitem name="openproject.time_entry" id="openproject_time_entries_menu_root" sequence="20" action="op_time_entry_action" />
+  </data>
+</odoo>
