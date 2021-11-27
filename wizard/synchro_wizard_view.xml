@@ -1,0 +1,51 @@
+<odoo>
+    <data>
+        <!--
+        <record id="sync_cron" model="ir.cron">
+            <field name="name">Sync data</field>
+            <field name="model_id" ref="sync.wizard"/>
+            <field name="state">code</field>
+            <field name="code">sync_wizard.cron_sync()</field>
+            <field name="user_id" ref="base.user_root"/>
+            <field name='interval_number'>1</field>
+            <field name='interval_type'>days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+        </record> -->
+
+    <!-- cron-->
+        <record id="sync_cron1" model="ir.cron">
+            <field name="name">Sync Data</field>
+            <field name="type">ir.actions.server</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="model_id" ref="model_sync_wizard"/>
+            <field name="state">code</field>
+            <field name="code">model.get_response()</field>
+        </record>
+     <!-- end cron-->
+     
+        <record id="sync_wizard_action1" model="ir.actions.act_window">
+            <field name="name">Sync.action</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">sync.wizard</field>
+            <field name="view_mode">form</field>
+        </record>
+        
+        <record id="sync_wizard_view1" model="ir.ui.view">
+            <field name="name">Sync View</field>
+            <field name="model">sync.wizard</field>
+            <field name="arch" type="xml">
+                <form>
+                    <footer>
+                        <button name="btn_sync" string="Sync" class="oe_right oe_highlight" type="object"/>
+                        <button string="Cancel" class="oe_right" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        <menuitem name="sync_wizard1" id="sync_wizard_menu_root" sequence="20" action="sync_wizard_action1" />
+    </data>
+</odoo>

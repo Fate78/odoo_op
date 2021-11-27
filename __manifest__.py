@@ -33,7 +33,7 @@
         'views/op.workpackage_view.xml',
         'views/op.time_entries_view.xml',
         'views/project_activity_view.xml',
-        'wizard/sync_wizard_view.xml',
+        'wizard/synchro_wizard_view.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
