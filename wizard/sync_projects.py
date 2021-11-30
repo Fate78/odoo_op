@@ -17,6 +17,8 @@ class SyncProjects(models.TransientModel):
     _description = 'Synchronize Projects'
     base_path = "http://localhost:8080"
     endpoint_url = "/api/v3/projects/"
+    hashed_project = hashlib.sha256()
+    hashed_op_project = hashlib.sha256()
 
     def get_api_key(self):
         api_key = self.env['ir.config_parameter'].sudo().get_param('openproject.api_key') or False
@@ -37,7 +39,6 @@ class SyncProjects(models.TransientModel):
 
         response = self.get_response(main_url)
         for r in response['_embedded']['elements']:
-            #print(r['description'])
             project_id = r['id']
             project_identifier = r['identifier']
             project_name = r['name']
@@ -45,27 +46,62 @@ class SyncProjects(models.TransientModel):
             dt_createdAt = parser.parse(r['createdAt'])
             dt_updatedAt = parser.parse(r['updatedAt'])
             public = r['public']
-            print(project_id, project_identifier, project_name, public)
+            string_op_id = json.dumps(r['id'])
+            string_op_public = json.dumps(r['public']) 
+            hashable_op_project = string_op_id + project_identifier + project_name + string_op_public
+            
             #Select data and hash it
-            # self.env.cr.execute("SELECT op_identifier, name, public FROM op_project")
-            # projects_dict = self.env.cr.dictfetchall()
-
-            #Insert or Update odoo db with op data
-            try:
+            #id=0,identifier=6,name=7,public=8
+            exists = self.env.cr.execute("""SELECT 1 FROM op_project WHERE id=%s"""%(project_id))
+            
+            #If exists
+            if(self.env.cr.fetchone()!=None):
                 self.env.cr.execute("""SELECT * FROM op_project WHERE id=%s"""%(project_id))
                 projects_dict = self.env.cr.fetchall()
-                print(f"\n {projects_dict[0]} \n")
-                #id=0,identifier=6,name=7,public=8
-                # for index in range(0, len(values)):
-                #     #print(f"\n\n {values[index]} \n\n")
-                #     print(f"\n {values[0]} \n")
-                self.env.cr.execute("""INSERT INTO op_project(id, op_identifier, name, public)
-                                    VALUES (%s, %s, %s, %s)
-                                    ON CONFLICT (id) DO UPDATE
-                                    SET id=%s, op_identifier=%s, name=%s, public=%s
-                                    WHERE op_project.id=%s
-                                    RETURNING op_identifier""",
-                                (project_id, project_identifier, project_name, public, project_id, project_identifier, project_name, public, project_id))
-            except Exception as e:
-                print("Exception has ocurred: ", e)
-                print("Exception type: ", type(e))
+                string_id = json.dumps(projects_dict[0][0])
+                string_public = json.dumps(projects_dict[0][8])
+
+                hashable_project = string_id + projects_dict[0][6] + projects_dict[0][7] + string_public
+
+                hashed_project = hashlib.md5(hashable_project.encode("utf-8")).hexdigest()
+                hashed_op_project = hashlib.md5(hashable_op_project.encode("utf-8")).hexdigest()
+                print("project_id: ", project_id)
+
+                print(hashed_project)
+                print(hashed_op_project)
+
+                if(hashed_project!=hashed_op_project):
+                    try:
+                        print("Updating project...\n")
+                        self.env.cr.execute("""UPDATE op_project
+                                            SET op_identifier=%s, name=%s, public=%s
+                                            WHERE op_project.id=%s
+                                            RETURNING op_identifier""",
+                                            (project_identifier, project_name, public, project_id))
+                    except Exception as e:
+                        print("Exception has ocurred: ", e)
+                        print("Exception type: ", type(e))
+                else:
+                    print("Project up to date\n")
+            else:
+                try:
+                    print("Creating project...\n")
+                    self.env.cr.execute("""INSERT INTO op_project(id, op_identifier, name, public)
+                                        VALUES (%s, %s, %s, %s)
+                                        RETURNING op_identifier""",
+                                    (project_id, project_identifier, project_name, public))
+                except Exception as e:
+                    print("Exception has ocurred: ", e)
+                    print("Exception type: ", type(e))
+            
+            #Check 50 items if they have an id
+            #If they dont create them
+            #If they do compare hashes
+
+            # for index in range(0, len(values)):
+            #     #print(f"\n\n {values[index]} \n\n")
+            #     print(f"\n {values[0]} \n")
+
+            #Insert or Update odoo db with op data if old_hash = new_hash
+            #Check if id exists in odoo if not insert if yes update
+            
