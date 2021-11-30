@@ -32,11 +32,11 @@ class Project(models.Model):
         'Is Public', help='Is this a public project?', readonly=False, required=True)
     partner_id = fields.Many2one('res.partner', string='Customer')
     billable = fields.Selection(
-        [('no', 'No'), ('yes', 'Yes')], string='Billable', required=True, default='no')
+        [('no', 'No'), ('yes', 'Yes')], string='Billable', required=False, default='no')
     default_rate = fields.Monetary(
-        string='Default Rate', required=True, default=0.0)
+        string='Default Rate', required=False, default=0.0)
     responsible_id = fields.Many2one('op.user', string='Responsible')
-    currency_id = fields.Many2one('res.currency', string='Currency', required=True,
+    currency_id = fields.Many2one('res.currency', string='Currency', required=False,
                                   default=lambda self: self.env.user.company_id.currency_id)
     op_activity_ids = fields.One2many('op.project.activity', 'op_project_id', string='Activities')
 

@@ -1,1 +1,1 @@
-from . import sync_wizard
+from . import sync_projects

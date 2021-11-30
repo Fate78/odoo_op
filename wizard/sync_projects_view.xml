@@ -1,0 +1,18 @@
+<odoo>
+    <data>
+       
+    <!-- cron-->
+        <record id="sync_projects_cron" model="ir.cron">
+            <field name="name">Sync Data</field>
+            <field name="type">ir.actions.server</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="model_id" ref="model_sync_projects"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_sync_projects()</field>
+        </record>
+     <!-- end cron-->
+    </data>
+</odoo>
