@@ -9,8 +9,9 @@ from pprint import pprint
 from datetime import datetime
 from dateutil import parser
 
-class InvalidDatabaseException(UserError):
-    """An error ocurred in the database"""
+#TODO
+#Query the database in batches
+#
 
 class SyncProjects(models.TransientModel):
     _name = 'sync.projects'
@@ -46,8 +47,8 @@ class SyncProjects(models.TransientModel):
             dt_createdAt = parser.parse(r['createdAt'])
             dt_updatedAt = parser.parse(r['updatedAt'])
             public = r['public']
-            string_op_id = json.dumps(r['id'])
-            string_op_public = json.dumps(r['public']) 
+            string_op_id = json.dumps(project_id)
+            string_op_public = json.dumps(public) 
             hashable_op_project = string_op_id + project_identifier + project_name + string_op_public
             
             #Select data and hash it

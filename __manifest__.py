@@ -33,8 +33,11 @@
         'views/op.workpackage_view.xml',
         'views/op.time_entries_view.xml',
         'views/project_activity_view.xml',
-        'wizard/sync_projects_view.xml',
         'views/res_config_settings_inherited_view.xml',
+        'views/op.versions_view.xml',
+        'wizard/sync_projects_view.xml',
+        'wizard/sync_workpackages_view.xml',
+        'wizard/sync_versions_view.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

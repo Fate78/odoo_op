@@ -102,3 +102,15 @@ class TimeEntries(models.Model):
     name = fields.Char(string="Comment", readonly=False, required=True)
     op_hours = fields.Float('Hours', readonly=False, required=True)
     op_spent_on = fields.Date(string='Spent On', readonly=False, required=True)
+
+class Versions(models.Model):
+    _name = 'op.project.version'
+    _inherit = ['openproject.base']
+    _description = "Project Versions"
+
+    db_project_id = fields.Integer('Project (OP_DB)', readonly=True, required=True, help="Stores the id from OP", default=0)
+
+    name = fields.Char(string="Name", readonly=False, required=True)
+    description = fields.Char(string="Description", readonly=False, required=True,default="")
+    status = fields.Selection([('open', 'Open'), ('locked', 'Locked'), ('closed', 'Closed')], string='Status', required=False, default='open')
+
