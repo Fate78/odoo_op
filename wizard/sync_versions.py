@@ -17,7 +17,7 @@ class SyncVersions(models.TransientModel):
 
     _name = 'sync.versions'
     _description = 'Synchronize Versions'
-    base_path = "http://localhost:8080"
+    base_path = "http://localhost:3000"
     endpoint_url = "/api/v3/projects/"
     hashed_ver = hashlib.sha256()
     hashed_op_ver = hashlib.sha256()
@@ -57,26 +57,24 @@ class SyncVersions(models.TransientModel):
             if(response_ver['_type']!="Error"):
                 for v in response_ver['_embedded']['elements']:
                     _id = json.dumps(v['id'])
-                    name = v['name']
-                    description = v['description']['raw']
-                    status = v['status']
+                    _name = v['name']
+                    _description = v['description']['raw']
+                    _status = v['status']
                     start_date = v['startDate']
                     end_date = v['endDate']
-                    project_href = v['_links']['definingProject']['href']
-                    project_id = self.get_project_id(project_href)
+                    _project_href = v['_links']['definingProject']['href']
+                    _project_id = self.get_project_id(_project_href)
 
-                    hashable_op_ver = _id + project_id + name + description + status
+                    hashable_op_ver = _id + _project_id + _name + _description + _status
 
-                    exists = self.env.cr.execute("""SELECT 1 FROM op_project_version WHERE id=%s"""%(_id))
-
-                    if(self.env.cr.fetchone()!=None):
-                        self.env.cr.execute("""SELECT * FROM op_project_version WHERE id=%s"""%(_id))
-                        versions_dict = self.env.cr.fetchall()
-                        ver_id = json.dumps(versions_dict[0][0])
-                        ver_project_id = json.dumps(versions_dict[0][2])
-                        ver_name = versions_dict[0][3]
-                        ver_description = versions_dict[0][4]
-                        ver_status = versions_dict[0][5]
+                    # exists = self.env.cr.execute("""SELECT 1 FROM op_project_version WHERE id=%s"""%(_id))
+                    versions=self.env['op.project.version'].search([['db_id','=',_id]])
+                    if(versions.exists()):
+                        ver_id = json.dumps(versions.db_id)
+                        ver_project_id = json.dumps(versions.db_project_id)
+                        ver_name = versions.name
+                        ver_description = versions.description
+                        ver_status = versions.status
 
                         hashable_ver = ver_id + ver_project_id + ver_name + ver_description + ver_status
 
@@ -89,11 +87,14 @@ class SyncVersions(models.TransientModel):
                         if(hashed_ver!=hashed_op_ver):
                             try:
                                 print("Updating version...\n")
-                                self.env.cr.execute("""UPDATE op_project_version
-                                                    SET db_project_id=%s, name=%s, description=%s, status=%s
-                                                    WHERE op_project_version.id=%s
-                                                    RETURNING name""",
-                                                    (project_id, name, description, status, _id))
+                                vals = {
+                                    'db_id':_id,
+                                    'db_project_id':_project_id,
+                                    'name':_name,
+                                    'description':_description,
+                                    'status':_status
+                                }
+                                versions.write(vals)
                             except Exception as e:
                                 print("Exception has ocurred: ", e)
                                 print("Exception type: ", type(e))
@@ -102,10 +103,14 @@ class SyncVersions(models.TransientModel):
                     else:
                         try:
                             print("Creating version...\n")
-                            self.env.cr.execute("""INSERT INTO op_project_version(id, db_project_id, name, description, status)
-                                                VALUES (%s, %s, %s, %s, %s)
-                                                RETURNING name""",
-                                            (_id, project_id, name, description, status))
+                            vals = {
+                                'db_id':_id,
+                                'db_project_id':_project_id,
+                                'name':_name,
+                                'description':_description,
+                                'status':_status
+                            }
+                            versions.create(vals)
                         except Exception as e:
                             print("Exception has ocurred: ", e)
                             print("Exception type: ", type(e))

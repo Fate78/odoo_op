@@ -16,7 +16,7 @@ from dateutil import parser
 class SyncProjects(models.TransientModel):
     _name = 'sync.projects'
     _description = 'Synchronize Projects'
-    base_path = "http://localhost:8080"
+    base_path = "http://localhost:3000"
     endpoint_url = "/api/v3/projects/"
     hashed_project = hashlib.sha256()
     hashed_op_project = hashlib.sha256()
@@ -40,33 +40,28 @@ class SyncProjects(models.TransientModel):
 
         response = self.get_response(main_url)
         for r in response['_embedded']['elements']:
-            project_id = r['id']
-            project_identifier = r['identifier']
-            project_name = r['name']
+            _id = r['id']
+            _identifier = r['identifier']
+            _name = r['name']
             archived = r['active']
             dt_createdAt = parser.parse(r['createdAt'])
             dt_updatedAt = parser.parse(r['updatedAt'])
-            public = r['public']
-            string_op_id = json.dumps(project_id)
-            string_op_public = json.dumps(public) 
-            hashable_op_project = string_op_id + project_identifier + project_name + string_op_public
+            _public = r['public']
+            string_op_id = json.dumps(_id)
+            string_op_public = json.dumps(_public) 
+            hashable_op_project = string_op_id + _identifier + _name + string_op_public
             
             #Select data and hash it
-            #id=0,identifier=6,name=7,public=8
-            exists = self.env.cr.execute("""SELECT 1 FROM op_project WHERE id=%s"""%(project_id))
-            
+            projects=self.env['op.project'].search([['db_id','=',_id]])
             #If exists
-            if(self.env.cr.fetchone()!=None):
-                self.env.cr.execute("""SELECT * FROM op_project WHERE id=%s"""%(project_id))
-                projects_dict = self.env.cr.fetchall()
-                string_id = json.dumps(projects_dict[0][0])
-                string_public = json.dumps(projects_dict[0][8])
-
-                hashable_project = string_id + projects_dict[0][6] + projects_dict[0][7] + string_public
+            if(projects.exists()):
+                project_id = json.dumps(projects.db_id)
+                project_public = json.dumps(projects.public)
+                hashable_project = project_id + projects.op_identifier + projects.name + project_public
 
                 hashed_project = hashlib.md5(hashable_project.encode("utf-8")).hexdigest()
                 hashed_op_project = hashlib.md5(hashable_op_project.encode("utf-8")).hexdigest()
-                print("project_id: ", project_id)
+                print("project_identifier: ", projects.op_identifier)
 
                 print(hashed_project)
                 print(hashed_op_project)
@@ -74,11 +69,13 @@ class SyncProjects(models.TransientModel):
                 if(hashed_project!=hashed_op_project):
                     try:
                         print("Updating project...\n")
-                        self.env.cr.execute("""UPDATE op_project
-                                            SET op_identifier=%s, name=%s, public=%s
-                                            WHERE op_project.id=%s
-                                            RETURNING op_identifier""",
-                                            (project_identifier, project_name, public, project_id))
+                        vals = {
+                            'db_id':_id,
+                            'op_identifier':_identifier,
+                            'name':_name,
+                            'public':_public
+                            }
+                        projects.write(vals)
                     except Exception as e:
                         print("Exception has ocurred: ", e)
                         print("Exception type: ", type(e))
@@ -87,10 +84,13 @@ class SyncProjects(models.TransientModel):
             else:
                 try:
                     print("Creating project...\n")
-                    self.env.cr.execute("""INSERT INTO op_project(id, op_identifier, name, public)
-                                        VALUES (%s, %s, %s, %s)
-                                        RETURNING op_identifier""",
-                                    (project_id, project_identifier, project_name, public))
+                    vals = {
+                        'db_id':_id,
+                        'op_identifier':_identifier,
+                        'name':_name,
+                        'public':_public
+                    }
+                    projects.create(vals)
                 except Exception as e:
                     print("Exception has ocurred: ", e)
                     print("Exception type: ", type(e))

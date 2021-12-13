@@ -41,7 +41,6 @@
     ],
     # only loaded in demonstration mode
     'demo': [
-        'demo/sync_wizard_view.xml',
     ],
     'installable': True,
     'application': True,

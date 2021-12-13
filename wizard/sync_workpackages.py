@@ -15,7 +15,7 @@ class SyncWorkPackages(models.TransientModel):
 
     _name = 'sync.workpackages'
     _description = 'Synchronize Work Packages'
-    base_path = "http://localhost:8080"
+    base_path = "http://localhost:3000"
     endpoint_url = "/api/v3/projects/"
     hashed_wp = hashlib.sha256()
     hashed_op_wp = hashlib.sha256()
