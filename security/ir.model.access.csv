@@ -9,3 +9,4 @@ openproject.access_sync_projects,access_sync_projects,openproject.model_sync_pro
 openproject.access_sync_workpackages,access_sync_workpackages,openproject.model_sync_workpackages,base.group_user,1,1,1,1
 openproject.access_op_project_version,access_op_project_version,openproject.model_op_project_version,base.group_user,1,1,1,1
 openproject.access_sync_versions,access_sync_versions,openproject.model_sync_versions,base.group_user,1,1,1,1
+openproject.access_post_projects,access_post_projects,openproject.model_post_projects,base.group_user,1,1,1,1

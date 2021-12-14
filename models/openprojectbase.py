@@ -9,7 +9,7 @@ class OpenProjectBase(models.AbstractModel):
     _order = 'db_id desc'
 
     db_id = fields.Integer(
-        'ID', readonly=True, help="Stores the id from OP (OP_DB)", index=True, required=True)
+        'DB_ID', readonly=True, help="Stores the id from OP (OP_DB)", index=True, required=True)
 
     # @api.multi
     def get_last_id(self):

@@ -38,6 +38,7 @@
         'wizard/sync_projects_view.xml',
         'wizard/sync_workpackages_view.xml',
         'wizard/sync_versions_view.xml',
+        'wizard/post_projects_view.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

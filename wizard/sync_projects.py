@@ -39,64 +39,66 @@ class SyncProjects(models.TransientModel):
         main_url = "%s%s" % (self.base_path, self.endpoint_url)
 
         response = self.get_response(main_url)
-        for r in response['_embedded']['elements']:
-            _id = r['id']
-            _identifier = r['identifier']
-            _name = r['name']
-            archived = r['active']
-            dt_createdAt = parser.parse(r['createdAt'])
-            dt_updatedAt = parser.parse(r['updatedAt'])
-            _public = r['public']
-            string_op_id = json.dumps(_id)
-            string_op_public = json.dumps(_public) 
-            hashable_op_project = string_op_id + _identifier + _name + string_op_public
-            
-            #Select data and hash it
-            projects=self.env['op.project'].search([['db_id','=',_id]])
-            #If exists
-            if(projects.exists()):
-                project_id = json.dumps(projects.db_id)
-                project_public = json.dumps(projects.public)
-                hashable_project = project_id + projects.op_identifier + projects.name + project_public
 
-                hashed_project = hashlib.md5(hashable_project.encode("utf-8")).hexdigest()
-                hashed_op_project = hashlib.md5(hashable_op_project.encode("utf-8")).hexdigest()
-                print("project_identifier: ", projects.op_identifier)
+        while response['_links']['nextByOffset']['href']:
+            for r in response['_embedded']['elements']:
+                _id = r['id']
+                _identifier = r['identifier']
+                _name = r['name']
+                archived = r['active']
+                dt_createdAt = parser.parse(r['createdAt'])
+                dt_updatedAt = parser.parse(r['updatedAt'])
+                _public = r['public']
+                string_op_id = json.dumps(_id)
+                string_op_public = json.dumps(_public) 
+                hashable_op_project = string_op_id + _identifier + _name + string_op_public
+                
+                #Search data and hash it
+                projects=self.env['op.project'].search([['db_id','=',_id]])
+                #If exists
+                if(projects.exists()):
+                    project_id = json.dumps(projects.db_id)
+                    project_public = json.dumps(projects.public)
+                    hashable_project = project_id + projects.op_identifier + projects.name + project_public
 
-                print(hashed_project)
-                print(hashed_op_project)
+                    hashed_project = hashlib.md5(hashable_project.encode("utf-8")).hexdigest()
+                    hashed_op_project = hashlib.md5(hashable_op_project.encode("utf-8")).hexdigest()
+                    print("project_identifier: ", projects.op_identifier)
 
-                if(hashed_project!=hashed_op_project):
+                    print(hashed_project)
+                    print(hashed_op_project)
+
+                    if(hashed_project!=hashed_op_project):
+                        try:
+                            print("Updating project...\n")
+                            vals = {
+                                'db_id':_id,
+                                'op_identifier':_identifier,
+                                'name':_name,
+                                'public':_public
+                                }
+                            projects.write(vals)
+                        except Exception as e:
+                            print("Exception has ocurred: ", e)
+                            print("Exception type: ", type(e))
+                    else:
+                        print("Project up to date\n")
+                else:
                     try:
-                        print("Updating project...\n")
+                        print("Creating project...\n")
                         vals = {
                             'db_id':_id,
                             'op_identifier':_identifier,
                             'name':_name,
                             'public':_public
-                            }
-                        projects.write(vals)
+                        }
+                        projects.create(vals)
                     except Exception as e:
                         print("Exception has ocurred: ", e)
                         print("Exception type: ", type(e))
-                else:
-                    print("Project up to date\n")
-            else:
-                try:
-                    print("Creating project...\n")
-                    vals = {
-                        'db_id':_id,
-                        'op_identifier':_identifier,
-                        'name':_name,
-                        'public':_public
-                    }
-                    projects.create(vals)
-                except Exception as e:
-                    print("Exception has ocurred: ", e)
-                    print("Exception type: ", type(e))
             
             #Check 50 items if they have an id
-            #If they dont create them
+            #If they dont, create them
             #If they do compare hashes
 
             # for index in range(0, len(values)):
