@@ -1,6 +1,5 @@
 from requests.models import HTTPBasicAuth
 from odoo import models, fields, api
-from odoo.exceptions import UserError
 import requests
 import json
 import hashlib
@@ -10,11 +9,6 @@ from datetime import datetime
 from datetime import timedelta
 from dateutil import parser
 
-#TODO
-#Query the database in batches
-#Check if writedate<1day and a half
-#If not then take 10 
-
 class SyncProjects(models.TransientModel):
     _name = 'sync.projects'
     _description = 'Synchronize Projects'
@@ -22,39 +16,17 @@ class SyncProjects(models.TransientModel):
     endpoint_url = "/api/v3/projects/"
     hashed_project = hashlib.sha256()
     hashed_op_project = hashlib.sha256()
+    limit=50
+    main_url = "%s%s" % (base_path,endpoint_url)
 
-    def get_api_key(self):
-        api_key = self.env['ir.config_parameter'].sudo().get_param('openproject.api_key') or False
-        return api_key
-    
-    def get_response(self,url):
-        api_key=self.get_api_key()
-        
-        resp = requests.get(
-            url,
-            auth=('apikey', api_key)
-            )
-        return json.loads(resp.text)
-
-    def get_comp_date(self):
-        now=datetime.now()
-        comp_date = now - timedelta(minutes=2)
-        return comp_date
-
+    def get_hashed(self,_id,identifier,name,public):
+        hashable=json.dumps(_id) + identifier + name + json.dumps(public)
+        hashed=hashlib.md5(hashable.encode("utf-8")).hexdigest()
+        return hashed
 
     def cron_sync_projects(self):
-        
-        project_id=None
-        project_name=None
-        project_identifier=None
-        project_public=None
-
-        main_url = "%s%s" % (self.base_path, self.endpoint_url)
-
-
-        projects=self.env['op.project'].search([['write_date','<',self.get_comp_date(),]],limit=10)
-        response = self.get_response(main_url)
-        # while response['_links']['nextByOffset']['href']:
+        projects = self.env['op.project'].get_data_to_update('op.project',self.limit)
+        response = self.env['op.project'].get_response(self.main_url)
         for r in response['_embedded']['elements']:
             project_search_id=self.env['op.project'].search([['db_id','=',r['id']]])
             _id = r['id']
@@ -64,45 +36,36 @@ class SyncProjects(models.TransientModel):
             dt_createdAt = parser.parse(r['createdAt'])
             dt_updatedAt = parser.parse(r['updatedAt'])
             _public = r['public']
-            string_op_id = json.dumps(_id)
-            string_op_public = json.dumps(_public) 
-            hashable_op_project = string_op_id + _identifier + _name + string_op_public
-            
             # If exists hash it
             if(project_search_id.exists()):
                 #Se os projetos com certa data não existirem ele não entra no for
-                for p in projects:
-                    if(p.db_id == _id):
-                        project_id=json.dumps(p.db_id)
-                        project_name=p.name
-                        project_identifier=p.op_identifier
-                        project_public=json.dumps(p.public)
-                        hashable_project = project_id + project_identifier + project_name + project_public
-                        hashed_project = hashlib.md5(hashable_project.encode("utf-8")).hexdigest()
-                
-                        hashed_op_project = hashlib.md5(hashable_op_project.encode("utf-8")).hexdigest()
-
-                        print(hashed_project)
-                        print(hashed_op_project)
-                        
-                        if(hashed_project!=hashed_op_project):
-                            try:
-                                print("Updating project...\n")
-                                vals = {
-                                    'db_id':_id,
-                                    'op_identifier':_identifier,
-                                    'name':_name,
-                                    'public':_public
-                                    }
-                                projects.write(vals)
-                            except Exception as e:
-                                print("Exception has ocurred: ", e)
-                                print("Exception type: ", type(e))
-                        else:
-                            print("Project up to date\n")
+                try:
+                    for p in projects:
+                        if(p.db_id == _id):
+                            hashed_project = self.get_hashed(p.db_id,p.op_identifier,p.name,p.public)
+                            hashed_op_project = self.get_hashed(_id,_identifier,_name,_public)
+                            print(hashed_project)
+                            print(hashed_op_project)
+                            if(hashed_project!=hashed_op_project):
+                                    print("Updating project: %s\n"%(p.db_id))
+                                    vals = {
+                                        'db_id':_id,
+                                        'op_identifier':_identifier,
+                                        'name':_name,
+                                        'public':_public
+                                        }
+                                    projects.write(vals)
+                            else:
+                                print("Project up to date: %s\n"%(_id))
+                                projects.write({'write_date':datetime.now()})
+                                #Update write_date to know it has been looked through
+                except Exception as e:
+                    print("Exception has ocurred: ", e)
+                    print("Exception type: ", type(e))
+                    self.env.cr.rollback()
             else:
                 try:
-                    print("Creating project...\n")
+                    print("Creating project: %s\n"%(_id))
                     vals = {
                         'db_id':_id,
                         'op_identifier':_identifier,
@@ -113,15 +76,6 @@ class SyncProjects(models.TransientModel):
                 except Exception as e:
                     print("Exception has ocurred: ", e)
                     print("Exception type: ", type(e))
-        
-        #Check 50 items if they have an id
-        #If they dont, create them
-        #If they do compare hashes
-
-        # for index in range(0, len(values)):
-        #     #print(f"\n\n {values[index]} \n\n")
-        #     print(f"\n {values[0]} \n")
-
-        #Insert or Update odoo db with op data if old_hash = new_hash
-        #Check if id exists in odoo if not insert if yes update
-        
+                    self.env.cr.rollback()
+        self.env.cr.commit()
+        print("All data commited")

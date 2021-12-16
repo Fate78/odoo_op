@@ -8,6 +8,7 @@ from base64 import b64encode
 from pprint import pprint
 from dateutil import parser
 from datetime import datetime
+from datetime import timedelta
 import isodate
 import json
 
@@ -35,6 +36,17 @@ class SyncVersions(models.TransientModel):
         api_key = self.env['ir.config_parameter'].sudo().get_param('openproject.api_key') or False
         return api_key
     
+    def get_data_to_update(self,limit):
+        now=datetime.now()
+        comp_date = now - timedelta(minutes=2)
+        projects=self.env['op.project'].search([['write_date','<',comp_date,]],limit=limit)
+        return projects
+
+    def get_hashed(self,_id,identifier,name,public):
+        hashable=json.dumps(_id) + identifier + name + json.dumps(public)
+        hashed=hashlib.md5(hashable.encode("utf-8")).hexdigest()
+        return hashed
+
     def get_response(self,url):
         api_key=self.get_api_key()
         
@@ -45,7 +57,6 @@ class SyncVersions(models.TransientModel):
         return json.loads(resp.text)
 
     def cron_sync_versions(self):
-
         #Loop through every project 
         projects_url = "%s%s" % (self.base_path, self.endpoint_url)
         response = self.get_response(projects_url)

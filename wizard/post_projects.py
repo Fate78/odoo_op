@@ -23,8 +23,8 @@ class PostProjects(models.TransientModel):
 
     def get_payload(self,id):
         payload = {
-            "identifier": "Project%s"%(id),
-            "name": "Project%s"%(id),
+            "identifier": "what%s"%(id),
+            "name": "what%s"%(id),
                     "active": True,
                     "public": False,
                     "description": {
