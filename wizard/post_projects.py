@@ -23,8 +23,8 @@ class PostProjects(models.TransientModel):
 
     def get_payload(self,id):
         payload = {
-            "identifier": "script_project%s"%(id),
-            "name": "script_project%s"%(id),
+            "identifier": "Project%s"%(id),
+            "name": "Project%s"%(id),
                     "active": True,
                     "public": False,
                     "description": {
@@ -69,7 +69,7 @@ class PostProjects(models.TransientModel):
         main_url = "%s%s" % (self.base_path, self.endpoint_url)
 
         try:
-            for id in range(0,50):
+            for id in range(0,1000):
                 response = self.post_response(main_url, self.get_payload(id))
                 print(response)
         except Exception as e:

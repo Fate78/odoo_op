@@ -3,3 +3,4 @@ from . import sync_workpackages
 from . import sync_versions
 from . import post_projects
 from . import update_projects
+from . import test_script

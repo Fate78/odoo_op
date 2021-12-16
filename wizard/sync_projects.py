@@ -38,7 +38,7 @@ class SyncProjects(models.TransientModel):
 
     def get_comp_date(self):
         now=datetime.now()
-        comp_date = now - timedelta(days=1, hours=12)
+        comp_date = now - timedelta(minutes=2)
         return comp_date
 
 
@@ -52,11 +52,11 @@ class SyncProjects(models.TransientModel):
         main_url = "%s%s" % (self.base_path, self.endpoint_url)
 
 
-        projects=self.env['op.project'].search([['write_date','<',self.get_comp_date(),]],limit=5)
-        
+        projects=self.env['op.project'].search([['write_date','<',self.get_comp_date(),]],limit=10)
         response = self.get_response(main_url)
         # while response['_links']['nextByOffset']['href']:
         for r in response['_embedded']['elements']:
+            project_search_id=self.env['op.project'].search([['db_id','=',r['id']]])
             _id = r['id']
             _identifier = r['identifier']
             _name = r['name']
@@ -69,7 +69,8 @@ class SyncProjects(models.TransientModel):
             hashable_op_project = string_op_id + _identifier + _name + string_op_public
             
             # If exists hash it
-            if(projects.exists()):
+            if(project_search_id.exists()):
+                #Se os projetos com certa data não existirem ele não entra no for
                 for p in projects:
                     if(p.db_id == _id):
                         project_id=json.dumps(p.db_id)

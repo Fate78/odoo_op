@@ -12,6 +12,7 @@ import time
 
 class PostProjects(models.TransientModel):
     _name = 'test.script'
+    _description = 'Test Script'
 
     def cron_test(self):
         for i in range(0,50):

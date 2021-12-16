@@ -11,3 +11,4 @@ openproject.access_op_project_version,access_op_project_version,openproject.mode
 openproject.access_sync_versions,access_sync_versions,openproject.model_sync_versions,base.group_user,1,1,1,1
 openproject.access_post_projects,access_post_projects,openproject.model_post_projects,base.group_user,1,1,1,1
 openproject.access_test_script,access_test_script,openproject.model_test_script,base.group_user,1,1,1,1
+openproject.access_update_projects,access_update_projects,openproject.model_update_projects,base.group_user,1,1,1,1
