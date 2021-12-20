@@ -21,7 +21,7 @@ class OpenProjectBase(models.AbstractModel):
 
     def get_data_to_update(self,model,limit):
         now=datetime.now()
-        comp_date = now - timedelta(minutes=2)
+        comp_date = now - timedelta(minutes=1)
         data=self.env[model].search([['write_date','<',comp_date,]],limit=limit)
         return data
     #settings functions
@@ -37,6 +37,12 @@ class OpenProjectBase(models.AbstractModel):
             auth=('apikey', api_key)
             )
         return json.loads(resp.text)
+
+    def get_projects_url(self):
+        base_path = "http://localhost:3000"
+        endpoint_url = "/api/v3/projects/"
+        main_url = "%s%s" % (base_path,endpoint_url)
+        return main_url
 
 class Project(models.Model):
     _name = 'op.project'

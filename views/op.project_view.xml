@@ -1,44 +1,5 @@
 <odoo>
   <data>
-    <!-- explicit list view definition -->
-    <!--
-    <record model="ir.ui.view" id="openproject.list">
-      <field name="name">openproject list</field>
-      <field name="model">openproject.openproject</field>
-      <field name="arch" type="xml">
-        <tree>
-          <field name="name"/>
-          <field name="value"/>
-          <field name="value2"/>
-        </tree>
-      </field>
-    </record>
--->
-
-    <!-- actions opening views on models -->
-    <!--
-    <record model="ir.actions.act_window" id="openproject.action_window">
-      <field name="name">openproject window</field>
-      <field name="res_model">openproject.openproject</field>
-      <field name="view_mode">tree,form</field>
-    </record>
--->
-
-    <!-- server action to the one above -->
-    <!--
-    <record model="ir.actions.server" id="openproject.action_server">
-      <field name="name">openproject server</field>
-      <field name="model_id" ref="model_openproject_openproject"/>
-      <field name="state">code</field>
-      <field name="code">
-        action = {
-          "type": "ir.actions.act_window",
-          "view_mode": "tree,form",
-          "res_model": model._name,
-        }
-      </field>
-    </record>
--->
     <record id="view_project_form" model="ir.ui.view">
       <field name="name">openproject.form</field>
       <field name="model">op.project</field>
@@ -68,6 +29,7 @@
       <field name="model">op.project</field>
       <field name="arch" type="xml">
         <tree>
+          <field name="db_id"/>
           <field name="op_identifier" />
           <field name="name" />
           <field name="public" />

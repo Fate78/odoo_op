@@ -69,7 +69,7 @@ class PostProjects(models.TransientModel):
         main_url = "%s%s" % (self.base_path, self.endpoint_url)
 
         try:
-            for id in range(0,1000):
+            for id in range(1,1000):
                 response = self.post_response(main_url, self.get_payload(id))
                 print(response)
         except Exception as e:
