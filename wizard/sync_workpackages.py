@@ -10,104 +10,84 @@ from dateutil import parser
 from datetime import datetime
 import isodate
 import json
+import logging
+
+_logger = logging.getLogger(__name__)
+
+class NonStopException(UserError):
+    """Will bypass the record"""
 
 class SyncWorkPackages(models.TransientModel):
 
     _name = 'sync.workpackages'
     _description = 'Synchronize Work Packages'
-    base_path = "http://localhost:3000"
-    endpoint_url = "/api/v3/projects/"
     hashed_wp = hashlib.sha256()
     hashed_op_wp = hashlib.sha256()
+    limit=10
 
-    #function to convert string duration to int
-    def get_spentTime(self,time_str):
-        h, m, s = time_str.split(':')
-        return int(h) + int(m) / 60
-
-    def get_api_key(self):
-        api_key = self.env['ir.config_parameter'].sudo().get_param('openproject.api_key') or False
-        return api_key
-    
-    def get_response(self,url):
-        api_key=self.get_api_key()
-        
-        resp = requests.get(
-            url,
-            auth=('apikey', api_key)
-            )
-        return json.loads(resp.text)
-
-    def get_project_id(self,href):
-        project_id = href.split('/')[-1]
-        return project_id
-
-    def get_project_workpackages_url(self,project):
-        endpoint_url = "/api/v3/projects/%s/work_packages" % (project)
-
-        return "%s" % (endpoint_url)
+    def get_hashed(self,_id,project_id,name,spent_time):
+        hashable=json.dumps(_id) + json.dumps(project_id) + name + json.dumps(spent_time)
+        hashed=hashlib.md5(hashable.encode("utf-8")).hexdigest()
+        return hashed
 
     def cron_sync_workpackages(self):
         #Loop through every project
-        projects_url = "%s%s" % (self.base_path, self.endpoint_url)
-        response = self.get_response(projects_url)
-
-        for r in response ['_embedded']['elements']:
-            _id = r['id']
-            active = r['active']
-            if(active!=False):
-                main_url = "%s%s" % (self.base_path,self.get_project_workpackages_url(_id))
-                response_wp = self.get_response(main_url)
-                for w in response_wp['_embedded']['elements']:
-                    wp_id = w['id']
-                    print(main_url)
-                    spentTime = isodate.parse_duration(w['spentTime'])
-                    string_spentTime = str(spentTime)
-                    int_spentTime = self.get_spentTime(string_spentTime)
-                    string_wp_id = json.dumps(wp_id)
-                    hashable_op_wp = string_wp_id + string_spentTime
-
-                    exists = self.env.cr.execute("""SELECT 1 FROM op_work_package WHERE id=%s"""%(wp_id))
+        projects_url = self.env['op.project'].get_projects_url()
+        response = self.env['op.project'].get_response(projects_url)
+        for r in response['_embedded']['elements']:
+            _id_project = r['id']
+            _active = r['active']
+            main_url = self.env['op.work.package'].get_project_workpackages_url(_id_project)
+            response_work_package = self.env['op.work.package'].get_response(main_url)
+            if(_active!=False):
+                for rw in response_work_package['_embedded']['elements']:
+                    _id = rw['id']
+                    _name = rw['subject']
+                    _spentTime = isodate.parse_duration(rw['spentTime'])
+                    _string_spentTime = str(_spentTime)
+                    _int_spentTime = self.env['op.work.package'].get_spentTime(_string_spentTime)
+                    work_packages=self.env['op.work.package'].get_data_to_update('op.work.package',self.limit)
+                    work_package_search_id=self.env['op.work.package'].search([['db_id','=',_id]])
                     
-                    #If exists
-                    if(self.env.cr.fetchone()!=None):
-                        self.env.cr.execute("""SELECT * FROM op_work_package WHERE id=%s"""%(wp_id))
-                        workpackages_dict = self.env.cr.fetchall()
-                        string_id = json.dumps(workpackages_dict[0][0])
-                        string_public = json.dumps(workpackages_dict[0][8])
-                        name = workpackages_dict[0][5]
-                        
-                        hashable_project = string_id + projects_dict[0][6] + projects_dict[0][7] + string_public
-
-                        hashed_project = hashlib.md5(hashable_project.encode("utf-8")).hexdigest()
-                        hashed_op_project = hashlib.md5(hashable_op_project.encode("utf-8")).hexdigest()
-                        print("project_id: ", project_id)
-
-                        print(hashed_project)
-                        print(hashed_op_project)
-
-                        if(hashed_project!=hashed_op_project):
-                            try:
-                                print("Updating project...\n")
-                                self.env.cr.execute("""UPDATE op_project
-                                                    SET op_identifier=%s, name=%s, public=%s
-                                                    WHERE op_project.id=%s
-                                                    RETURNING op_identifier""",
-                                                    (project_identifier, project_name, public, project_id))
-                            except Exception as e:
-                                print("Exception has ocurred: ", e)
-                                print("Exception type: ", type(e))
-                        else:
-                            print("Project up to date\n")
+                    if(work_package_search_id.exists()):
+                        for w in work_packages:
+                            if(w.db_id==_id):
+                                hashed_wp = self.get_hashed(w.db_id,w.db_project_id,w.name,w.spent_time)
+                                hashed_op_wp = self.get_hashed(_id,_id_project,_name,_int_spentTime)
+                                print(hashed_wp)
+                                print(hashed_op_wp)
+                                if(hashed_wp!=hashed_op_wp):
+                                    try:
+                                        print("Updating version...\n")
+                                        vals = {
+                                            'db_project_id':_id_project,
+                                            'name':_name,
+                                            'spent_time':_int_spentTime
+                                        }
+                                        work_package_search_id.write(vals)
+                                    except NonStopException:
+                                        _logger.error('Bypass Error: %s' % e)
+                                        continue
+                                    except Exception as e:
+                                        _logger.error('Error: %s' % e)
+                                        self.env.cr.rollback()
+                                else:
+                                    print("Version up to date\n")
+                                    work_package_search_id.write({'write_date':datetime.now()})
                     else:
                         try:
-                            print("Creating project...\n")
-                            self.env.cr.execute("""INSERT INTO op_project(id, op_identifier, name, public)
-                                                VALUES (%s, %s, %s, %s)
-                                                RETURNING op_identifier""",
-                                            (project_id, project_identifier, project_name, public))
+                            print("Creating version...\n")
+                            vals = {
+                                'db_id':_id,
+                                'db_project_id':_id_project,
+                                'name':_name,
+                                'spent_time':_int_spentTime
+                            }
+                            work_packages.create(vals)
                         except Exception as e:
                             print("Exception has ocurred: ", e)
                             print("Exception type: ", type(e))
             else:
-                print("Permission denied to project %s" % (_id))
+                print("Permission denied to project %d" % (_id_project))
+        self.env.cr.commit()
+        print("All data commited")

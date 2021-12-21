@@ -1,0 +1,18 @@
+<odoo>
+    <data>
+       
+    <!-- cron-->
+        <record id="update_work_packages_cron" model="ir.cron">
+            <field name="name">Patch Data</field>
+            <field name="type">ir.actions.server</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="model_id" ref="model_update_work_packages"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_update_work_packages()</field>
+        </record>
+     <!-- end cron-->
+    </data>
+</odoo>

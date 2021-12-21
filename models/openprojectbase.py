@@ -91,13 +91,16 @@ class WorkPackage(models.Model):
     _inherit = ['openproject.base']
     _description = 'Work Package (OP)'
 
-    #@api.multi
-    def _compute_op_url(self):
-        for wp in self:
-            # TODO: OpenProject domain should be a system parameter
-            if wp.op_project_id:
-                wp.op_url = 'https://pm.odoogap.com/projects/%s/work_packages/%s' % (
-                    wp.op_project_id.op_identifier, wp.db_id)
+    def get_project_workpackages_url(self,project):
+        base_path = "http://localhost:3000"
+        endpoint_url = "/api/v3/projects/%s/work_packages" % (project)
+
+        return "%s%s" % (base_path,endpoint_url)
+
+    #function to convert string duration to int   
+    def get_spentTime(self,time_str):
+        h, m, s = time_str.split(':')
+        return int(h) + int(m) / 60
 
     # As in OP database is
     db_project_id = fields.Integer('Project (OP_DB)', readonly=True, help="Stores the id from OP", index=True,
@@ -108,16 +111,16 @@ class WorkPackage(models.Model):
 
     # Real Odoo model records
     name = fields.Char(string="Name", readonly=False, required=True)
-    op_project_id = fields.Many2one('op.project', 'Project (OP)', readonly=False)
-    op_responsible_id = fields.Many2one('op.user', string='Responsible', index=True, readonly=False)
-    op_author_id = fields.Many2one('op.user', string='Author', index=True, readonly=False)
-    op_url = fields.Char('URL (OP)', compute='_compute_op_url', readonly=False)
+    spent_time = fields.Float('Spent Time', readonly=False, required=True, default=0.0)
+    op_project_id = fields.Many2one('op.project', 'Project (OP)', readonly=False, required=False)
+    op_responsible_id = fields.Many2one('op.user', string='Responsible', index=True, readonly=False, required=False)
+    op_author_id = fields.Many2one('op.user', string='Author', index=True, readonly=False, required=False)
+    #op_url = fields.Char('URL (OP)', compute='_compute_op_url', readonly=False, required=False)
 
 class TimeEntries(models.Model):
     _name = 'op.time.entry'
     _inherit = ['openproject.base']
     _description = 'Time Entries'
-
 
     # As in OP database is
     db_project_id = fields.Integer('Project (OP_DB)', readonly=True, required=True, help="Stores the id from OP", default=0)
@@ -134,6 +137,12 @@ class Versions(models.Model):
     _name = 'op.project.version'
     _inherit = ['openproject.base']
     _description = "Project Versions"
+
+    def get_project_versions_url(self,project):
+        base_path = "http://localhost:3000"
+        endpoint_url = "/api/v3/projects/%s/versions" % (project)
+
+        return "%s%s" % (base_path,endpoint_url)
 
     db_project_id = fields.Integer('Project (OP_DB)', readonly=True, required=True, help="Stores the id from OP", default=0)
 

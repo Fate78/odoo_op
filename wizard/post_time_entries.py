@@ -10,11 +10,11 @@ from datetime import datetime
 from dateutil import parser
 
 
-class PostProjects(models.TransientModel):
-    _name = 'post.projects'
-    _description = 'Create Projects'
+class PostTimeEntries(models.TransientModel):
+    _name = 'post.time_entries'
+    _description = 'Create Entries'
     base_path = "http://localhost:3000"
-    endpoint_url = "/api/v3/projects/"
+    endpoint_url = "/api/v3/time_entries/"
     hashed_project = hashlib.sha256()
     hashed_op_project = hashlib.sha256()
     headers = {
@@ -23,28 +23,25 @@ class PostProjects(models.TransientModel):
 
     def get_payload(self,id):
         payload = {
-            "identifier": "project%s"%(id),
-            "name": "project%s"%(id),
-            "active": True,
-            "public": False,
-            "description": {
-                "format": "markdown",
+            "comment": {
+                "format": "plain",
                 "raw": None,
                 "html": ""
-                    },
-            "statusExplanation": {
-                        "format": "markdown",
-                        "raw": None,
-                        "html": ""
-                    },
+            },
+            "spentOn": "21-12-21",
+            "hours": 1.5,
             "_links": {
-                        "parent": {
-                            "href": None
-                        },
-                        "status": {
-                            "href": None
-                        }
-                    }
+                "project": {
+                    "href": None
+                },
+                "workPackage": {
+                    "href": None
+                },
+                "activity": {
+                    "href": "/api/v3/time_entries/activities/1",
+                    "title": "Management"
+                }
+            }
         }
         return payload
 
@@ -64,10 +61,9 @@ class PostProjects(models.TransientModel):
         )
         return json.loads(resp.text)
 
-    def cron_create_projects(self):
+    def cron_create_time_entries(self):
 
         main_url = "%s%s" % (self.base_path, self.endpoint_url)
-
         try:
             for id in range(1,10):
                 response = self.post_response(main_url, self.get_payload(id))

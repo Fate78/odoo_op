@@ -35,11 +35,13 @@
         'views/project_activity_view.xml',
         'views/res_config_settings_inherited_view.xml',
         'views/op.versions_view.xml',
-        'wizard/sync_projects_view.xml',
-        #'wizard/sync_workpackages_view.xml',
-        'wizard/sync_versions_view.xml',
-        'wizard/post_projects_view.xml',
-        'wizard/update_projects_view.xml',
+        'wizard/views/sync_projects_view.xml',
+        'wizard/views/sync_workpackages_view.xml',
+        'wizard/views/sync_versions_view.xml',
+        #'wizard/views/post_projects_view.xml',
+        #'wizard/views/update_projects_view.xml',
+        #'wizard/views/post_work_packages_view.xml',
+        #'wizard/views/update_work_packages_view.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

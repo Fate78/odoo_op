@@ -21,7 +21,7 @@ class SyncProjects(models.TransientModel):
     _description = 'Synchronize Projects'
     hashed_project = hashlib.sha256()
     hashed_op_project = hashlib.sha256()
-    limit=1099
+    limit=10
     
 
     def get_hashed(self,_id,identifier,name,public):
@@ -72,7 +72,7 @@ class SyncProjects(models.TransientModel):
                                 self.env.cr.rollback()
                         else:
                             print("Project up to date: %s\n"%(_id))
-                            projects.write({'write_date':datetime.now()})
+                            project_search_id.write({'write_date':datetime.now()})
                             #Updating write_date to know it has been looked through
             else:
                 try:

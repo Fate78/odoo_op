@@ -12,3 +12,5 @@ openproject.access_sync_versions,access_sync_versions,openproject.model_sync_ver
 openproject.access_post_projects,access_post_projects,openproject.model_post_projects,base.group_user,1,1,1,1
 openproject.access_test_script,access_test_script,openproject.model_test_script,base.group_user,1,1,1,1
 openproject.access_update_projects,access_update_projects,openproject.model_update_projects,base.group_user,1,1,1,1
+openproject.access_post_work_packages,access_post_work_packages,openproject.model_post_work_packages,base.group_user,1,1,1,1
+openproject.access_update_work_packages,access_update_work_packages,openproject.model_update_work_packages,base.group_user,1,1,1,1
