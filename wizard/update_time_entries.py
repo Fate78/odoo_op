@@ -8,11 +8,12 @@ from base64 import b64encode
 from pprint import pprint
 from datetime import datetime
 from dateutil import parser
+import random
 
 
-class PostTimeEntries(models.TransientModel):
-    _name = 'post.time_entries'
-    _description = 'Create Entries'
+class UpdateTimeEntries(models.TransientModel):
+    _name = 'update.time_entries'
+    _description = 'Update Time Entries'
     base_path = "http://localhost:3000"
     endpoint_url = "/api/v3/time_entries/"
     hashed_project = hashlib.sha256()
@@ -21,8 +22,8 @@ class PostTimeEntries(models.TransientModel):
         'content-type': 'application/json'
     }
 
-    def get_payload(self,id):
-        payload = {
+    def get_payload(self,project,work_package,activity):
+        payload= {
             "comment": {
                 "format": "plain",
                 "raw": None,
@@ -32,17 +33,17 @@ class PostTimeEntries(models.TransientModel):
             "hours": "PT1H",
             "_links": {
                 "project": {
-                    "href": "/api/v3/projects/1821"
+                    "href": "/api/v3/projects/%s"%project,
                 },
                 "workPackage": {
-                    "href": "/api/v3/work_packages/38"
+                    "href": "/api/v3/work_packages/%s"%work_package,
                 },
                 "activity": {
-                    "href": "/api/v3/time_entries/activities/1",
-                    "title": "Management"
+                    "href": "/api/v3/time_entries/activities/%s"%activity,
                 }
             }
         }
+
         return payload
 
     def get_api_key(self):
@@ -50,10 +51,10 @@ class PostTimeEntries(models.TransientModel):
         ).get_param('openproject.api_key') or False
         return api_key
 
-    def post_response(self, url, payload):
+    def patch_response(self, url, payload):
         api_key = self.get_api_key()
 
-        resp = requests.post(
+        resp = requests.patch(
             url,
             auth=('apikey', api_key),
             data=json.dumps(payload),
@@ -61,13 +62,14 @@ class PostTimeEntries(models.TransientModel):
         )
         return json.loads(resp.text)
 
-    def cron_create_time_entries(self):
-
-        main_url = "%s%s" % (self.base_path, self.endpoint_url)
+    def cron_update_time_entries(self):
         try:
-            for id in range(1,10):
-                response = self.post_response(main_url, self.get_payload(id))
-                print(response)
+            for id in range(1,21):
+                project = random.randint(1821,1829)
+                work_package = random.randint(34,53)
+                activity = random.randint(1,4)
+                main_url = "%s%s/%s" % (self.base_path, self.endpoint_url, id)
+                response = self.patch_response(main_url, self.get_payload(project,work_package,activity))
         except Exception as e:
             print("Exception has ocurred: ", e)
             print("Exception type: ", type(e))

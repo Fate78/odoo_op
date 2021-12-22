@@ -44,6 +44,16 @@ class OpenProjectBase(models.AbstractModel):
         main_url = "%s%s" % (base_path,endpoint_url)
         return main_url
 
+    #get id through href
+    def get_id_href(self,href):
+        _id = href.split('/')[-1]
+        return _id
+    
+    #convert string duration to float  
+    def get_timeFloat(self,time_str):
+        h, m, s = time_str.split(':')
+        return int(h) + int(m) / 60
+
 class Project(models.Model):
     _name = 'op.project'
     _description = 'Project (OP)'
@@ -97,11 +107,6 @@ class WorkPackage(models.Model):
 
         return "%s%s" % (base_path,endpoint_url)
 
-    #function to convert string duration to int   
-    def get_spentTime(self,time_str):
-        h, m, s = time_str.split(':')
-        return int(h) + int(m) / 60
-
     # As in OP database is
     db_project_id = fields.Integer('Project (OP_DB)', readonly=True, help="Stores the id from OP", index=True,
                                    required=True, default=0)
@@ -122,6 +127,12 @@ class TimeEntries(models.Model):
     _inherit = ['openproject.base']
     _description = 'Time Entries'
 
+    def get_time_entries_url(self):
+        base_path = "http://localhost:3000"
+        endpoint_url = "/api/v3/time_entries"
+
+        return "%s%s" % (base_path,endpoint_url)
+
     # As in OP database is
     db_project_id = fields.Integer('Project (OP_DB)', readonly=True, required=True, help="Stores the id from OP", default=0)
     db_user_id = fields.Integer('User (OP_DB)', readonly=True, required=True, help="Stores the id from OP", default=0)
@@ -129,7 +140,7 @@ class TimeEntries(models.Model):
     db_activity_id = fields.Integer('Activity (OP_DB)', readonly=True, required=True, help="Stores the id from OP", default=0)
 
     # Real Odoo model records
-    name = fields.Char(string="Comment", readonly=False, required=True)
+    comment = fields.Char(string="Comment", readonly=False, required=False)
     op_hours = fields.Float('Hours', readonly=False, required=True)
     op_spent_on = fields.Date(string='Spent On', readonly=False, required=True)
 

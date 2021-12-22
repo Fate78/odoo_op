@@ -2,16 +2,16 @@
     <data>
        
     <!-- cron-->
-        <record id="post_time_entries_cron" model="ir.cron">
-            <field name="name">Post Data</field>
+        <record id="sync_time_entries_cron" model="ir.cron">
+            <field name="name">Sync Data</field>
             <field name="type">ir.actions.server</field>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
             <field name="numbercall">-1</field>
             <field name="doall" eval="False"/>
-            <field name="model_id" ref="model_post_time_entries"/>
+            <field name="model_id" ref="model_sync_time_entries"/>
             <field name="state">code</field>
-            <field name="code">model.cron_create_time_entries()</field>
+            <field name="code">model.cron_sync_time_entries()</field>
         </record>
      <!-- end cron-->
     </data>

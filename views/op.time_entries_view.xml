@@ -8,7 +8,12 @@
           <sheet>
             <group>
               <group>
-                <field name="name" />
+                <field name="db_id"/>
+                <field name="db_project_id"/>
+                <field name="db_user_id"/>
+                <field name="db_work_package_id"/>
+                <field name="db_activity_id"/>
+                <field name="comment" />
                 <field name="op_hours" />
                 <field name="op_spent_on" />
               </group>
@@ -24,7 +29,12 @@
       <field name="model">op.time.entry</field>
       <field name="arch" type="xml">
         <tree>
-          <field name="name" />
+          <field name="db_id"/>
+          <field name="db_project_id"/>
+          <field name="db_user_id"/>
+          <field name="db_work_package_id"/>
+          <field name="db_activity_id"/>
+          <field name="comment" />
           <field name="op_hours" />
           <field name="op_spent_on" />
         </tree>

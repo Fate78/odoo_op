@@ -45,7 +45,7 @@ class SyncWorkPackages(models.TransientModel):
                     _name = rw['subject']
                     _spentTime = isodate.parse_duration(rw['spentTime'])
                     _string_spentTime = str(_spentTime)
-                    _int_spentTime = self.env['op.work.package'].get_spentTime(_string_spentTime)
+                    _int_spentTime = self.env['op.work.package'].get_timeFloat(_string_spentTime)
                     work_packages=self.env['op.work.package'].get_data_to_update('op.work.package',self.limit)
                     work_package_search_id=self.env['op.work.package'].search([['db_id','=',_id]])
                     
