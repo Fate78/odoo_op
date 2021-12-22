@@ -32,21 +32,22 @@ class SyncVersions(models.TransientModel):
         return hashed
 
     def cron_sync_versions(self):
-        # Loop through every project 
+        # Loop through every project
+        env_version = self.env['op.project.version']
         projects_url = self.env['op.project'].get_projects_url()
         response = self.env['op.project'].get_response(projects_url)
         for r in response['_embedded']['elements']:
             _id_project = r['id']
-            main_url = self.env['op.project.version'].get_project_versions_url(_id_project)
-            response_ver = self.env['op.project.version'].get_response(main_url)
+            main_url = env_version.get_project_versions_url(_id_project)
+            response_ver = env_version.get_response(main_url)
             if(response_ver['_type']!="Error"):
                 for rv in response_ver['_embedded']['elements']:
                     _id = rv['id']
                     _name = rv['name']
                     _description = rv['description']['raw']
                     _status = rv['status']
-                    versions=self.env['op.project.version'].get_data_to_update('op.project.version',self.limit)
-                    version_search_id=self.env['op.project.version'].search([['db_id','=',_id]])
+                    versions=env_version.get_data_to_update('op.project.version',self.limit)
+                    version_search_id=env_version.search([['db_id','=',_id]])
                     if(version_search_id.exists()):
                         for v in versions:
                             if(v.db_id==_id):

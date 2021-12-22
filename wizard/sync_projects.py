@@ -21,35 +21,38 @@ class SyncProjects(models.TransientModel):
     _description = 'Synchronize Projects'
     hashed_project = hashlib.sha256()
     hashed_op_project = hashlib.sha256()
-    limit=10
+    limit=1829
     
 
-    def get_hashed(self,_id,identifier,name,public):
-        hashable=json.dumps(_id) + identifier + name + json.dumps(public)
+    def get_hashed(self,_id,identifier,name,public,description,active):
+        hashable=json.dumps(_id) + identifier + name + json.dumps(public) + json.dumps(description) + json.dumps(active)
         print("Inside Hash: ", _id,identifier)
         hashed=hashlib.md5(hashable.encode("utf-8")).hexdigest()
         return hashed
 
     def cron_sync_projects(self):
-        main_url = self.env['op.project'].get_projects_url()
-        projects = self.env['op.project'].get_data_to_update('op.project',self.limit)
-        response = self.env['op.project'].get_response(main_url)
+        env_project = self.env['op.project']
+        main_url = env_project.get_projects_url()
+        projects = env_project.get_data_to_update('op.project',self.limit)
+        response = env_project.get_response(main_url)
         for r in response['_embedded']['elements']:
-            project_search_id=self.env['op.project'].search([['db_id','=',r['id']]])
+            project_search_id=env_project.search([['db_id','=',r['id']]])
             _id = r['id']
             _identifier = r['identifier']
             _name = r['name']
-            archived = r['active']
-            dt_createdAt = parser.parse(r['createdAt'])
-            dt_updatedAt = parser.parse(r['updatedAt'])
+            _description = r['description']['raw']
+            _active = r['active']
+            # dt_createdAt = parser.parse(r['createdAt'])
+            # dt_updatedAt = parser.parse(r['updatedAt'])
             _public = r['public']
             if(project_search_id.exists()):
                 #Se os projetos com certa data não existirem ele não entra no for
                 for p in projects:
                     if(p.db_id == _id):
-                        print("Before Hash: ", p.db_id,p.op_identifier)
-                        hashed_project = self.get_hashed(p.db_id,p.op_identifier,p.name,p.public)
-                        hashed_op_project = self.get_hashed(_id,_identifier,_name,_public)
+                        print("Before Hash: ", p.db_id,p.op_identifier,p.name,p.public,p.description,p.active)
+                        print("Before Hash: ",_id,_identifier,_name,_public,_description,_active)
+                        hashed_project = self.get_hashed(p.db_id,p.op_identifier,p.name,p.public,p.description,p.active)
+                        hashed_op_project = self.get_hashed(_id,_identifier,_name,_public,_description,_active)
                         print("project: ",p.db_id)
                         print(hashed_project)
                         print(p.db_id)
@@ -61,7 +64,9 @@ class SyncProjects(models.TransientModel):
                                 vals = {
                                     'op_identifier':_identifier,
                                     'name':_name,
-                                    'public':_public
+                                    'public':_public,
+                                    'description':_description,
+                                    'active':_active
                                     }
                                 project_search_id.write(vals)
                             except NonStopException:
@@ -81,7 +86,9 @@ class SyncProjects(models.TransientModel):
                         'db_id':_id,
                         'op_identifier':_identifier,
                         'name':_name,
-                        'public':_public
+                        'public':_public,
+                        'description':_description,
+                        'active':_active
                     }
                     projects.create(vals)
                 except Exception as e:

@@ -32,22 +32,23 @@ class SyncWorkPackages(models.TransientModel):
 
     def cron_sync_workpackages(self):
         #Loop through every project
+        env_work_package = self.env['op.work.package']
         projects_url = self.env['op.project'].get_projects_url()
         response = self.env['op.project'].get_response(projects_url)
         for r in response['_embedded']['elements']:
             _id_project = r['id']
             _active = r['active']
-            main_url = self.env['op.work.package'].get_project_workpackages_url(_id_project)
-            response_work_package = self.env['op.work.package'].get_response(main_url)
+            main_url = env_work_package.get_project_workpackages_url(_id_project)
+            response_work_package = env_work_package.get_response(main_url)
             if(_active!=False):
                 for rw in response_work_package['_embedded']['elements']:
                     _id = rw['id']
                     _name = rw['subject']
                     _spentTime = isodate.parse_duration(rw['spentTime'])
                     _string_spentTime = str(_spentTime)
-                    _int_spentTime = self.env['op.work.package'].get_timeFloat(_string_spentTime)
-                    work_packages=self.env['op.work.package'].get_data_to_update('op.work.package',self.limit)
-                    work_package_search_id=self.env['op.work.package'].search([['db_id','=',_id]])
+                    _int_spentTime = env_work_package.get_timeFloat(_string_spentTime)
+                    work_packages=env_work_package.get_data_to_update('op.work.package',self.limit)
+                    work_package_search_id=env_work_package.search([['db_id','=',_id]])
                     
                     if(work_package_search_id.exists()):
                         for w in work_packages:

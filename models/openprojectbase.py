@@ -67,6 +67,9 @@ class Project(models.Model):
                        required=True)
     public = fields.Boolean(
         'Is Public', help='Is this a public project?', readonly=False, required=True)
+    active = fields.Boolean(
+        'Is Active', help='Is this an active project?', readonly=False, required=True, default=False)
+    description = fields.Char(string="Description", readonly=False, required=False,default="")
     partner_id = fields.Many2one('res.partner', string='Customer')
     billable = fields.Selection(
         [('no', 'No'), ('yes', 'Yes')], string='Billable', required=False, default='no')
@@ -158,6 +161,6 @@ class Versions(models.Model):
     db_project_id = fields.Integer('Project (OP_DB)', readonly=True, required=True, help="Stores the id from OP", default=0)
 
     name = fields.Char(string="Name", readonly=False, required=True)
-    description = fields.Char(string="Description", readonly=False, required=True,default="")
+    description = fields.Char(string="Description", readonly=False, required=False,default="")
     status = fields.Selection([('open', 'Open'), ('locked', 'Locked'), ('closed', 'Closed')], string='Status', required=False, default='open')
 
