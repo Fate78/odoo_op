@@ -8,9 +8,11 @@
           <sheet>
             <group>
               <group>
-                <field name="name" />
+                <field name="firstname" />
+                <field name="lastname" />
                 <field name="login" />
                 <field name="email" />
+                <field name="admin" />
               </group>
               <group></group>
             </group>
@@ -24,9 +26,11 @@
       <field name="model">op.user</field>
       <field name="arch" type="xml">
         <tree>
-          <field name="name" />
+          <field name="firstname" />
+          <field name="lastname" />
           <field name="login" />
           <field name="email" />
+          <field name="admin" />
         </tree>
       </field>
     </record>

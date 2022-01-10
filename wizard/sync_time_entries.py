@@ -25,8 +25,8 @@ class SyncTimeEntries(models.TransientModel):
     limit=10
     
 
-    def get_hashed(self,_id, _project_id, _user_id, _work_package_id, _activity_id, _hours, _spentOn):
-        hashable=json.dumps(_id) + str(_project_id) + str(_user_id) + str(_work_package_id) + str(_activity_id) + str(_hours) + str(_spentOn)
+    def get_hashed(self,_id, _project_id, _user_id, _work_package_id, _activity_id, _hours, _spentOn, _comment):
+        hashable=json.dumps(_id) + str(_project_id) + str(_user_id) + str(_work_package_id) + str(_activity_id) + str(_hours) + str(_spentOn) + _comment
         print("Inside Hash: ", hashable)
         hashed=hashlib.md5(hashable.encode("utf-8")).hexdigest()
         return hashed
@@ -39,6 +39,7 @@ class SyncTimeEntries(models.TransientModel):
         for r in response['_embedded']['elements']:
             time_entry_search_id=env_time_entry.search([['db_id','=',r['id']]])
             _id = r['id']
+            _comment = r['comment']['raw']
             _project_id = env_time_entry.get_id_href(r['_links']['project']['href'])
             _user_id = env_time_entry.get_id_href(r['_links']['user']['href'])
             _work_package_id = env_time_entry.get_id_href(r['_links']['workPackage']['href'])
@@ -47,13 +48,25 @@ class SyncTimeEntries(models.TransientModel):
             _spentOn_date = datetime.strptime(_spentOn,"%Y-%m-%d")
             _hours = r['hours']#iso
             _hours_float = env_time_entry.get_timeFloat(str(isodate.parse_duration(_hours)))
+            
             if(time_entry_search_id.exists()):
                 for t in time_entries:
                     if(t.db_id == _id):
-                        print("Before Hash: ", t.db_id,t.db_project_id,t.db_user_id,t.db_work_package_id,t.db_activity_id,t.op_hours,t.op_spent_on)
-                        hashed_time_entry = self.get_hashed(t.db_id, t.db_project_id, t.db_user_id, t.db_work_package_id, 
-                                                            t.db_activity_id, t.op_hours, t.op_spent_on)
-                        hashed_op_time_entry = self.get_hashed(_id, _project_id, _user_id, _work_package_id, _activity_id, _hours_float, _spentOn)
+                        t_db_id=t.db_id
+                        t_db_project_id=t.db_project_id
+                        t_db_user_id=t.db_user_id
+                        t_db_work_package_id=t.db_work_package_id
+                        t_db_activity_id=t.db_activity_id
+                        t_op_hours=t.op_hours
+                        t_op_spent_on=t.op_spent_on
+                        t_comment=env_time_entry.verify_field_is_false(t.comment)
+
+                        _comment=env_time_entry.verify_field_is_None(_comment)
+                        
+                        hashed_time_entry = self.get_hashed(t_db_id, t_db_project_id, t_db_user_id, t_db_work_package_id, 
+                                                                t_db_activity_id, t_op_hours, t_op_spent_on, t_comment)  
+                        
+                        hashed_op_time_entry = self.get_hashed(_id, _project_id, _user_id, _work_package_id, _activity_id, _hours_float, _spentOn, _comment)
                         print("Time Entry: ",t.db_id)
                         print(hashed_time_entry)
                         print(hashed_op_time_entry)
@@ -66,7 +79,8 @@ class SyncTimeEntries(models.TransientModel):
                                     'db_work_package_id':_work_package_id,
                                     'db_activity_id':_activity_id,
                                     'op_hours':_hours_float,
-                                    'op_spent_on':_spentOn_date
+                                    'op_spent_on':_spentOn_date,
+                                    'comment':_comment
                                     }
                                 time_entry_search_id.write(vals)
                             except NonStopException:
@@ -89,7 +103,8 @@ class SyncTimeEntries(models.TransientModel):
                         'db_work_package_id':_work_package_id,
                         'db_activity_id':_activity_id,
                         'op_hours':_hours_float,
-                        'op_spent_on':_spentOn_date
+                        'op_spent_on':_spentOn_date,
+                        'comment':_comment
                     }
                     time_entries.create(vals)
                 except Exception as e:

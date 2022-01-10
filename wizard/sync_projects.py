@@ -21,11 +21,10 @@ class SyncProjects(models.TransientModel):
     _description = 'Synchronize Projects'
     hashed_project = hashlib.sha256()
     hashed_op_project = hashlib.sha256()
-    limit=1829
-    
+    limit=50
 
     def get_hashed(self,_id,identifier,name,public,description,active):
-        hashable=json.dumps(_id) + identifier + name + json.dumps(public) + json.dumps(description) + json.dumps(active)
+        hashable=json.dumps(_id) + identifier + name + json.dumps(public) + description + json.dumps(active)
         print("Inside Hash: ", _id,identifier)
         hashed=hashlib.md5(hashable.encode("utf-8")).hexdigest()
         return hashed
@@ -49,15 +48,13 @@ class SyncProjects(models.TransientModel):
                 #Se os projetos com certa data não existirem ele não entra no for
                 for p in projects:
                     if(p.db_id == _id):
-                        print("Before Hash: ", p.db_id,p.op_identifier,p.name,p.public,p.description,p.active)
-                        print("Before Hash: ",_id,_identifier,_name,_public,_description,_active)
+                        #Initialize description if it's None
+                        if(_description==None):
+                            _description=""
                         hashed_project = self.get_hashed(p.db_id,p.op_identifier,p.name,p.public,p.description,p.active)
                         hashed_op_project = self.get_hashed(_id,_identifier,_name,_public,_description,_active)
                         print("project: ",p.db_id)
-                        print(hashed_project)
-                        print(p.db_id)
-                        print(hashed_op_project)
-                        print(_id)
+                        
                         if(hashed_project!=hashed_op_project):
                             try:
                                 print("Updating project: %s\n"%(p.db_id))

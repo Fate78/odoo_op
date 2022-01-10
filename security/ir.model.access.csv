@@ -17,3 +17,4 @@ openproject.access_update_work_packages,access_update_work_packages,openproject.
 openproject.access_post_time_entries,access_post_time_entries,openproject.model_post_time_entries,base.group_user,1,1,1,1
 openproject.access_sync_time_entries,access_sync_time_entries,openproject.model_sync_time_entries,base.group_user,1,1,1,1
 openproject.access_update_time_entries,access_update_time_entries,openproject.model_update_time_entries,base.group_user,1,1,1,1
+openproject.access_sync_users,access_sync_users,openproject.model_sync_users,base.group_user,1,1,1,1

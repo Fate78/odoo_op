@@ -24,7 +24,7 @@ class SyncVersions(models.TransientModel):
     _description = 'Synchronize Versions'
     hashed_ver = hashlib.sha256()
     hashed_op_ver = hashlib.sha256()
-    limit=10
+    limit=50
 
     def get_hashed(self,_id,project_id,name,description,status):
         hashable=json.dumps(_id) + json.dumps(project_id) + name + description + status

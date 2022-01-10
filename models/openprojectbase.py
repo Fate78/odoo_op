@@ -53,7 +53,17 @@ class OpenProjectBase(models.AbstractModel):
     def get_timeFloat(self,time_str):
         h, m, s = time_str.split(':')
         return int(h) + int(m) / 60
-
+    
+    #Verifications
+    def verify_field_is_false(self,field):
+        if(field==False):
+            field=""        
+        return field
+    def verify_field_is_None(self,field):
+        if(field==None):
+            field=""        
+        return field
+        
 class Project(models.Model):
     _name = 'op.project'
     _description = 'Project (OP)'
@@ -65,11 +75,9 @@ class Project(models.Model):
         string="Identifier (OP)", readonly=True, required=True, default=0)
     name = fields.Char(string="Name", readonly=False,
                        required=True)
-    public = fields.Boolean(
-        'Is Public', help='Is this a public project?', readonly=False, required=True)
-    active = fields.Boolean(
-        'Is Active', help='Is this an active project?', readonly=False, required=True, default=False)
-    description = fields.Char(string="Description", readonly=False, required=False,default="")
+    public = fields.Boolean('Is Public', help='Is this a public project?', readonly=False, required=True)
+    active = fields.Boolean('Is Active', help='Is this an active project?', readonly=False, required=True, default=False)
+    description = fields.Char(string="Description", readonly=False, required=False, default='')
     partner_id = fields.Many2one('res.partner', string='Customer')
     billable = fields.Selection(
         [('no', 'No'), ('yes', 'Yes')], string='Billable', required=False, default='no')
@@ -87,17 +95,31 @@ class User(models.Model):
     _description = 'User (OP)'
 
     # Real Odoo model records
-    name = fields.Char(string="Name", readonly=False, required=True)
+    firstname = fields.Char(string="First Name", readonly=False, required=True)
+    lastname = fields.Char(string="Last Name", readonly=False, required=True)
     login = fields.Char(string="Login", readonly=False, required=True)
     email = fields.Char(string="Email", readonly=False, required=True)
+    admin = fields.Boolean('Is Admin', help='Is this user an admin?', readonly=False, required=True)
+    
+    def get_users_url(self):
+        base_path = "http://localhost:3000"
+        endpoint_url = "/api/v3/users/"
+        main_url = "%s%s" % (base_path,endpoint_url)
+        return main_url
 
 class Activity(models.Model):
     _name = 'op.activity'
     _inherit = ['openproject.base']
     _description = 'Activity (OP)'
-
+    
     # Real Odoo model records
     name = fields.Char(string='Name', readonly=False, required=True)
+    
+    def get_activities_url(self,_id):
+        base_path = "http://localhost:3000"
+        endpoint_url = "/api/v3/time_entries/activities/%s"%_id
+        main_url = "%s%s" % (base_path,endpoint_url)
+        return main_url
 
 class WorkPackage(models.Model):
     _name = 'op.work.package'
@@ -114,13 +136,13 @@ class WorkPackage(models.Model):
     db_project_id = fields.Integer('Project (OP_DB)', readonly=True, help="Stores the id from OP", index=True,
                                    required=True, default=0)
     db_responsible_id = fields.Integer('Responsible (OP_DB)', readonly=True, help="Stores the id from OP",
-                                       required=True, default=0)
-    db_author_id = fields.Integer('Author (OP_DB)', readonly=True, help="Stores the id from OP", required=True, default=0)
+                                       required=False)
+    db_author_id = fields.Integer('Author (OP_DB)', readonly=True, help="Stores the id from OP", required=True)
 
     # Real Odoo model records
     name = fields.Char(string="Name", readonly=False, required=True)
+    description = fields.Char(string="Description", readonly=False, required=False, default='')
     spent_time = fields.Float('Spent Time', readonly=False, required=True, default=0.0)
-    op_project_id = fields.Many2one('op.project', 'Project (OP)', readonly=False, required=False)
     op_responsible_id = fields.Many2one('op.user', string='Responsible', index=True, readonly=False, required=False)
     op_author_id = fields.Many2one('op.user', string='Author', index=True, readonly=False, required=False)
     #op_url = fields.Char('URL (OP)', compute='_compute_op_url', readonly=False, required=False)
@@ -143,7 +165,7 @@ class TimeEntries(models.Model):
     db_activity_id = fields.Integer('Activity (OP_DB)', readonly=True, required=True, help="Stores the id from OP", default=0)
 
     # Real Odoo model records
-    comment = fields.Char(string="Comment", readonly=False, required=False)
+    comment = fields.Char(string="Comment", readonly=False, required=False, default='')
     op_hours = fields.Float('Hours', readonly=False, required=True)
     op_spent_on = fields.Date(string='Spent On', readonly=False, required=True)
 

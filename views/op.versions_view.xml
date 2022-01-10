@@ -26,6 +26,7 @@
       <field name="arch" type="xml">
         <tree>
           <field name="name" />
+                <field name="db_id"/>
                 <field name="name" />
                 <field name="db_project_id"/>
                 <field name="description" />

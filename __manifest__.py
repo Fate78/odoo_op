@@ -29,7 +29,7 @@
         'views/op.project_view.xml',
         'views/templates.xml',
         'views/op.user_view.xml',
-        'views/op.activity_view.xml',
+        #'views/op.activity_view.xml',
         'views/op.workpackage_view.xml',
         'views/op.time_entries_view.xml',
         'views/project_activity_view.xml',
@@ -39,12 +39,13 @@
         'wizard/views/sync_workpackages_view.xml',
         'wizard/views/sync_versions_view.xml',
         'wizard/views/sync_time_entries_view.xml',
+        'wizard/views/sync_users_view.xml',
         #'wizard/views/post_projects_view.xml',
         #'wizard/views/update_projects_view.xml',
         #'wizard/views/post_work_packages_view.xml',
         #'wizard/views/update_work_packages_view.xml',
         #'wizard/views/post_time_entries_view.xml',
-        'wizard/views/update_time_entries_view.xml',
+        #'wizard/views/update_time_entries_view.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
