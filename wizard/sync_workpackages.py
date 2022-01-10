@@ -68,8 +68,8 @@ class SyncWorkPackages(models.TransientModel):
                                 w_db_author_id=w.db_author_id
                                 w_db_responsible_id=env_work_package.verify_field_is_false(w.db_responsible_id)
                                 
-                                _description=env_work_package.verify_field_is_None(_description)
-                                _responsible_id=env_work_package.verify_field_is_None(_responsible_id)
+                                _description=env_work_package.verify_field_is_none(_description)
+                                _responsible_id=env_work_package.verify_field_is_none(_responsible_id)
                                 
                                 hashed_wp = self.get_hashed(w_db_id,w_db_project_id,w_name,w_description,w_spent_time,w_db_author_id,w_db_responsible_id)
                                 print(w_db_id,w_db_project_id,w_name,w_description,w_spent_time,w_db_author_id,w_db_responsible_id)

@@ -49,9 +49,15 @@ class SyncProjects(models.TransientModel):
                 for p in projects:
                     if(p.db_id == _id):
                         #Initialize description if it's None
-                        if(_description==None):
-                            _description=""
-                        hashed_project = self.get_hashed(p.db_id,p.op_identifier,p.name,p.public,p.description,p.active)
+                        p_db_id=p.db_id
+                        p_op_identifier=p.op_identifier
+                        p_name=p.name
+                        p_public=p.public
+                        p_description=env_project.verify_field_is_false(p.description)
+                        p_active=p.active
+                        _description=env_project.verify_field_is_none(_description)
+                        
+                        hashed_project = self.get_hashed(p_db_id,p_op_identifier,p_name,p_public,p_description,p_active)
                         hashed_op_project = self.get_hashed(_id,_identifier,_name,_public,_description,_active)
                         print("project: ",p.db_id)
                         

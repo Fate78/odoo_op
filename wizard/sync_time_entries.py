@@ -60,13 +60,12 @@ class SyncTimeEntries(models.TransientModel):
                         t_op_hours=t.op_hours
                         t_op_spent_on=t.op_spent_on
                         t_comment=env_time_entry.verify_field_is_false(t.comment)
+                        _comment=env_time_entry.verify_field_is_none(_comment)
 
-                        _comment=env_time_entry.verify_field_is_None(_comment)
-                        
                         hashed_time_entry = self.get_hashed(t_db_id, t_db_project_id, t_db_user_id, t_db_work_package_id, 
                                                                 t_db_activity_id, t_op_hours, t_op_spent_on, t_comment)  
-                        
-                        hashed_op_time_entry = self.get_hashed(_id, _project_id, _user_id, _work_package_id, _activity_id, _hours_float, _spentOn, _comment)
+                        hashed_op_time_entry = self.get_hashed(_id, _project_id, _user_id, _work_package_id, _activity_id, 
+                                                                _hours_float, _spentOn, _comment)
                         print("Time Entry: ",t.db_id)
                         print(hashed_time_entry)
                         print(hashed_op_time_entry)

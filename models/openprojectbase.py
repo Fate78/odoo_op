@@ -21,7 +21,7 @@ class OpenProjectBase(models.AbstractModel):
 
     def get_data_to_update(self,model,limit):
         now=datetime.now()
-        comp_date = now - timedelta(minutes=1)
+        comp_date = now - timedelta(minutes=2)
         data=self.env[model].search([['write_date','<',comp_date,]],limit=limit)
         return data
     #settings functions
@@ -59,11 +59,11 @@ class OpenProjectBase(models.AbstractModel):
         if(field==False):
             field=""        
         return field
-    def verify_field_is_None(self,field):
+    def verify_field_is_none(self,field):
         if(field==None):
             field=""        
         return field
-        
+
 class Project(models.Model):
     _name = 'op.project'
     _description = 'Project (OP)'
