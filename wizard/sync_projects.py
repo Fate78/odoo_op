@@ -41,11 +41,8 @@ class SyncProjects(models.TransientModel):
             _name = r['name']
             _description = r['description']['raw']
             _active = r['active']
-            # dt_createdAt = parser.parse(r['createdAt'])
-            # dt_updatedAt = parser.parse(r['updatedAt'])
             _public = r['public']
             if(project_search_id.exists()):
-                #Se os projetos com certa data não existirem ele não entra no for
                 for p in projects:
                     if(p.db_id == _id):
                         #Initialize description if it's None
@@ -53,10 +50,10 @@ class SyncProjects(models.TransientModel):
                         p_op_identifier=p.op_identifier
                         p_name=p.name
                         p_public=p.public
-                        p_description=env_project.verify_field_is_false(p.description)
+                        p_description=env_project.verify_field_empty(p.description)
                         p_active=p.active
-                        _description=env_project.verify_field_is_none(_description)
-                        
+                        _description=env_project.verify_field_empty(_description)
+
                         hashed_project = self.get_hashed(p_db_id,p_op_identifier,p_name,p_public,p_description,p_active)
                         hashed_op_project = self.get_hashed(_id,_identifier,_name,_public,_description,_active)
                         print("project: ",p.db_id)

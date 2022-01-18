@@ -54,9 +54,9 @@ class SyncVersions(models.TransientModel):
                                 v_db_id=v.db_id
                                 v_db_project_id=v.db_project_id
                                 v_name=v.name
-                                v_description=env_version.verify_field_is_false(v.description)
+                                v_description=env_version.verify_field_empty(v.description)
                                 v_status=v.status
-                                _description=env_version.verify_field_is_none(_description)
+                                _description=env_version.verify_field_empty(_description)
 
                                 hashed_ver = self.get_hashed(v_db_id,v_db_project_id,v_name,v_description,v_status)
                                 hashed_op_ver = self.get_hashed(_id,_id_project,_name,_description,_status)

@@ -55,13 +55,11 @@ class OpenProjectBase(models.AbstractModel):
         return int(h) + int(m) / 60
     
     #Verifications
-    def verify_field_is_false(self,field):
+    def verify_field_empty(self,field):
         if(field==False):
-            field=""        
-        return field
-    def verify_field_is_none(self,field):
+            field=""
         if(field==None):
-            field=""        
+            field=""     
         return field
 
 class Project(models.Model):
