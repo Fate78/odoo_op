@@ -9,21 +9,20 @@ import hashlib
 from base64 import b64encode
 from pprint import pprint
 from datetime import datetime
-from datetime import timedelta
-from dateutil import parser
 
 _logger = logging.getLogger(__name__)
+
 
 class NonStopException(UserError):
     """Will bypass the record"""
 
-class SyncTimeEntries(models.TransientModel):
+
+class SyncTimeEntries(models.AbstractModel):
     _name = 'sync.time_entries'
     _description = 'Synchronize Time Entries'
     hashed_time_entry = hashlib.sha256()
     hashed_op_time_entry = hashlib.sha256()
-    limit=10
-    
+    limit=5
 
     def get_hashed(self,_id, _project_id, _user_id, _work_package_id, _activity_id, _hours, _spentOn, _comment):
         hashable=json.dumps(_id) + str(_project_id) + str(_user_id) + str(_work_package_id) + str(_activity_id) + str(_hours) + str(_spentOn) + _comment

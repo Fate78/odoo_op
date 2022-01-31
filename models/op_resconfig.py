@@ -1,5 +1,6 @@
 from odoo import models, fields, api
 
+
 class OpResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'
 

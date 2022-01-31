@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-
 from odoo import models, fields, api
 from datetime import datetime
 from datetime import timedelta
 import requests
 import json
 
+"""Abstract class with methods and fields that can be inherited by other classes"""
 class OpenProjectBase(models.AbstractModel):
     _name = 'openproject.base'
     _description = "Abstract Model for other tables"
@@ -14,21 +14,23 @@ class OpenProjectBase(models.AbstractModel):
     db_id = fields.Integer(
         'DB_ID', readonly=True, help="Stores the id from OP (OP_DB)", index=True, required=True)
 
-    # @api.multi
     def get_last_id(self):
         db_ids = self.search([], limit=1, order="db_id desc")
         return db_ids and max([n['db_id'] for n in db_ids]) or 0
 
+    #Searches the database of a model for data that hasn't been updated in a certain time (1.5 days)
     def get_data_to_update(self,model,limit):
         now=datetime.now()
-        comp_date = now - timedelta(minutes=2)
+        comp_date = now - timedelta(minutes=2) #defines the interval of time of when to check
         data=self.env[model].search([['write_date','<',comp_date,]],limit=limit)
         return data
-    #settings functions
+    
+    #gets the api_key from param 'openproject.api_key' from 'ir.config_parameter' model
     def get_api_key(self):
         api_key = self.env['ir.config_parameter'].sudo().get_param('openproject.api_key') or False
         return api_key
 
+    #requests the OP url with api_key and returns json data
     def get_response(self,url):
         api_key=self.get_api_key()
         
@@ -37,6 +39,35 @@ class OpenProjectBase(models.AbstractModel):
             auth=('apikey', api_key)
             )
         return json.loads(resp.text)
+    
+    #input url and payload and returns json to insert data into OP
+    def get_post_response(self, url, payload):
+        api_key = self.get_api_key()
+
+        resp = requests.post(
+            url,
+            auth=('apikey', api_key),
+            data=json.dumps(payload),
+            headers=self.headers
+        )
+        return json.loads(resp.text)
+    #get id through href
+    def get_id_href(self,href):
+        _id = href.split('/')[-1]
+        return _id
+ 
+    #input time string and return time float
+    def get_timeFloat(self,time_str):
+        h, m, s = time_str.split(':')
+        return int(h) + int(m) / 60
+
+    #Verify if field is False or None and initialize it
+    def verify_field_empty(self,field):
+        if(field==False):
+            field=""
+        if(field==None):
+            field=""     
+        return field
 
     def get_projects_url(self):
         base_path = "http://localhost:3000"
@@ -44,23 +75,6 @@ class OpenProjectBase(models.AbstractModel):
         main_url = "%s%s" % (base_path,endpoint_url)
         return main_url
 
-    #get id through href
-    def get_id_href(self,href):
-        _id = href.split('/')[-1]
-        return _id
-    
-    #convert string duration to float  
-    def get_timeFloat(self,time_str):
-        h, m, s = time_str.split(':')
-        return int(h) + int(m) / 60
-    
-    #Verifications
-    def verify_field_empty(self,field):
-        if(field==False):
-            field=""
-        if(field==None):
-            field=""     
-        return field
 
 class Project(models.Model):
     _name = 'op.project'
@@ -76,6 +90,9 @@ class Project(models.Model):
     public = fields.Boolean('Is Public', help='Is this a public project?', readonly=False, required=True)
     active = fields.Boolean('Is Active', help='Is this an active project?', readonly=False, required=True, default=False)
     description = fields.Char(string="Description", readonly=False, required=False, default='')
+    op_activity_ids = fields.One2many('op.project.activity', 'op_project_id', string='Activities')
+
+    """TODO: Get these fields from OpenProject API"""
     partner_id = fields.Many2one('res.partner', string='Customer')
     billable = fields.Selection(
         [('no', 'No'), ('yes', 'Yes')], string='Billable', required=False, default='no')
@@ -84,7 +101,6 @@ class Project(models.Model):
     responsible_id = fields.Many2one('op.user', string='Responsible')
     currency_id = fields.Many2one('res.currency', string='Currency', required=False,
                                   default=lambda self: self.env.user.company_id.currency_id)
-    op_activity_ids = fields.One2many('op.project.activity', 'op_project_id', string='Activities')
 
 
 class User(models.Model):
@@ -99,11 +115,13 @@ class User(models.Model):
     email = fields.Char(string="Email", readonly=False, required=True)
     admin = fields.Boolean('Is Admin', help='Is this user an admin?', readonly=False, required=True)
     
+    #return the api url for the users 
     def get_users_url(self):
         base_path = "http://localhost:3000"
         endpoint_url = "/api/v3/users/"
         main_url = "%s%s" % (base_path,endpoint_url)
         return main_url
+
 
 class Activity(models.Model):
     _name = 'op.activity'
@@ -119,16 +137,11 @@ class Activity(models.Model):
         main_url = "%s%s" % (base_path,endpoint_url)
         return main_url
 
+
 class WorkPackage(models.Model):
     _name = 'op.work.package'
     _inherit = ['openproject.base']
     _description = 'Work Package (OP)'
-
-    def get_project_workpackages_url(self,project):
-        base_path = "http://localhost:3000"
-        endpoint_url = "/api/v3/projects/%s/work_packages" % (project)
-
-        return "%s%s" % (base_path,endpoint_url)
 
     # As in OP database is
     db_project_id = fields.Integer('Project (OP_DB)', readonly=True, help="Stores the id from OP", index=True,
@@ -143,18 +156,18 @@ class WorkPackage(models.Model):
     spent_time = fields.Float('Spent Time', readonly=False, required=True, default=0.0)
     op_responsible_id = fields.Many2one('op.user', string='Responsible', index=True, readonly=False, required=False)
     op_author_id = fields.Many2one('op.user', string='Author', index=True, readonly=False, required=False)
-    #op_url = fields.Char('URL (OP)', compute='_compute_op_url', readonly=False, required=False)
+
+    def get_project_workpackages_url(self,project):
+        base_path = "http://localhost:3000"
+        endpoint_url = "/api/v3/projects/%s/work_packages" % (project)
+
+        return "%s%s" % (base_path,endpoint_url)
+
 
 class TimeEntries(models.Model):
     _name = 'op.time.entry'
     _inherit = ['openproject.base']
     _description = 'Time Entries'
-
-    def get_time_entries_url(self):
-        base_path = "http://localhost:3000"
-        endpoint_url = "/api/v3/time_entries"
-
-        return "%s%s" % (base_path,endpoint_url)
 
     # As in OP database is
     db_project_id = fields.Integer('Project (OP_DB)', readonly=True, required=True, help="Stores the id from OP", default=0)
@@ -167,16 +180,17 @@ class TimeEntries(models.Model):
     op_hours = fields.Float('Hours', readonly=False, required=True)
     op_spent_on = fields.Date(string='Spent On', readonly=False, required=True)
 
+    def get_time_entries_url(self):
+        base_path = "http://localhost:3000"
+        endpoint_url = "/api/v3/time_entries"
+
+        return "%s%s" % (base_path,endpoint_url)
+
+
 class Versions(models.Model):
     _name = 'op.project.version'
     _inherit = ['openproject.base']
     _description = "Project Versions"
-
-    def get_project_versions_url(self,project):
-        base_path = "http://localhost:3000"
-        endpoint_url = "/api/v3/projects/%s/versions" % (project)
-
-        return "%s%s" % (base_path,endpoint_url)
 
     db_project_id = fields.Integer('Project (OP_DB)', readonly=True, required=True, help="Stores the id from OP", default=0)
 
@@ -184,3 +198,24 @@ class Versions(models.Model):
     description = fields.Char(string="Description", readonly=False, required=False,default="")
     status = fields.Selection([('open', 'Open'), ('locked', 'Locked'), ('closed', 'Closed')], string='Status', required=False, default='open')
 
+    def get_project_versions_url(self,project):
+        base_path = "http://localhost:3000"
+        endpoint_url = "/api/v3/projects/%s/versions" % (project)
+
+        return "%s%s" % (base_path,endpoint_url)
+
+class ScheduledTasks(models.model):
+    _name = 'op.scheduled.tasks'
+    _inherit = ['openproject.base']
+
+    name = fields.Char(string="Name", readonly=False, required=True)
+    description = fields.Char(string="Description", readonly=False, required=False,default="")
+    frequency = fields.Selection([('daily', 'Daily'), ('weekly', 'Weekly'), ('monthly', 'Monthly')], 
+                string='Frequency', required=False, default='daily')
+    
+    """TODO:
+        1. criar cron que verifica se é necessário correr os crons de criação de tasks
+        2. pesquisa na tabela scheduled_tasks se existem crons diários
+        3. caso existam corre-os
+        4. pesquisa na tabela se existem crons semanais/mensais para aquele dia
+        5. caso existam corre-os"""

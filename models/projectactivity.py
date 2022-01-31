@@ -1,5 +1,6 @@
 from odoo import models, fields, api
 
+
 class ProjectActivity(models.Model):
     _name = 'op.project.activity'
     _description = 'Project Activity'

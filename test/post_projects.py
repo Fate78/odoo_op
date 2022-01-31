@@ -3,20 +3,12 @@ from odoo import models, fields, api
 from odoo.exceptions import UserError
 import requests
 import json
-import hashlib
-from base64 import b64encode
-from pprint import pprint
-from datetime import datetime
-from dateutil import parser
-
 
 class PostProjects(models.TransientModel):
     _name = 'post.projects'
     _description = 'Create Projects'
     base_path = "http://localhost:3000"
     endpoint_url = "/api/v3/projects/"
-    hashed_project = hashlib.sha256()
-    hashed_op_project = hashlib.sha256()
     headers = {
         'content-type': 'application/json'
     }

@@ -2,26 +2,25 @@ from requests.models import HTTPBasicAuth
 import logging
 from odoo import models, fields, api
 from odoo.exceptions import UserError, ValidationError
-import requests
 import json
 import hashlib
 from base64 import b64encode
 from pprint import pprint
 from datetime import datetime
-from datetime import timedelta
-from dateutil import parser
 
 _logger = logging.getLogger(__name__)
+
 
 class NonStopException(UserError):
     """Will bypass the record"""
 
-class SyncProjects(models.TransientModel):
+
+class SyncProjects(models.AbstractModel):
     _name = 'sync.projects'
     _description = 'Synchronize Projects'
     hashed_project = hashlib.sha256()
     hashed_op_project = hashlib.sha256()
-    limit=50
+    limit=10
 
     def get_hashed(self,_id,identifier,name,public,description,active):
         hashable=json.dumps(_id) + identifier + name + json.dumps(public) + description + json.dumps(active)
@@ -45,18 +44,18 @@ class SyncProjects(models.TransientModel):
             if(project_search_id.exists()):
                 for p in projects:
                     if(p.db_id == _id):
-                        #Initialize description if it's None
                         p_db_id=p.db_id
                         p_op_identifier=p.op_identifier
                         p_name=p.name
                         p_public=p.public
-                        p_description=env_project.verify_field_empty(p.description)
                         p_active=p.active
+                        p_description=env_project.verify_field_empty(p.description)
                         _description=env_project.verify_field_empty(_description)
+                        #Initialize description if it's None
 
                         hashed_project = self.get_hashed(p_db_id,p_op_identifier,p_name,p_public,p_description,p_active)
                         hashed_op_project = self.get_hashed(_id,_identifier,_name,_public,_description,_active)
-                        print("project: ",p.db_id)
+                        print("project: ", p.db_id)
                         
                         if(hashed_project!=hashed_op_project):
                             try:

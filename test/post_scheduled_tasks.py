@@ -1,40 +1,26 @@
 from requests.models import HTTPBasicAuth
 from odoo import models, fields, api
 from odoo.exceptions import UserError
-import requests
-import json
-import hashlib
-from base64 import b64encode
-from pprint import pprint
 from datetime import datetime
-from dateutil import parser
 
 
-class PostWorkPackages(models.TransientModel):
+class PostWorkPackages(models.AbstractModel):
     _name = 'post.work_packages'
     _description = 'Create Work_Packages'
-    hashed_project = hashlib.sha256()
-    hashed_op_project = hashlib.sha256()
     headers = {
         'content-type': 'application/json'
     }
 
-    def get_main_url(self,project_id):
-        base_path = "http://localhost:3000"
-        endpoint_url = "/api/v3/projects/%s/work_packages"%project_id
-        main_url="%s%s" % (base_path, endpoint_url)
-        return main_url
-
-    def get_payload(self,project_id,id):
+    def get_payload(self, project_id, wp_ref, subject, start_date, due_date):
         payload = {
-            "subject": "package%s"%id,
+            "subject": "%s%s" % (subject, wp_ref),
             "description": {
                 "format": "markdown",
                 "raw": None,
                 "html": ""
             },
             "scheduleManually": False,
-            "startDate": None,
+            "startDate": start_date,
             "dueDate": None,
             "estimatedTime": None,
             "percentageDone": 0,
@@ -52,8 +38,7 @@ class PostWorkPackages(models.TransientModel):
                     "title": "Normal"
                 },
                 "project": {
-                    "href": "/api/v3/projects/%s"%project_id,
-                    "title": "project1"
+                    "href": "/api/v3/projects/%s" % project_id,
                 },
                 "status": {
                     "href": "/api/v3/statuses/1",
@@ -76,34 +61,28 @@ class PostWorkPackages(models.TransientModel):
         }
         return payload
 
-    def get_api_key(self):
-        api_key = self.env['ir.config_parameter'].sudo(
-        ).get_param('openproject.api_key') or False
-        return api_key
-
-    def post_response(self, url, payload):
-        api_key = self.get_api_key()
-
-        resp = requests.post(
-            url,
-            auth=('apikey', api_key),
-            data=json.dumps(payload),
-            headers=self.headers
-        )
-        return json.loads(resp.text)
-
     def cron_create_work_packages(self):
-        try:
-            for p in range(1821,1830):
-                main_url = self.get_main_url(p)
-                print(p)
-                print("main_url: ",main_url)
-                for id in range(1,5):
-                    response = self.post_response(main_url, self.get_payload(p,id))
-                    print(response)
-        except Exception as e:
-            print("Exception has ocurred: ", e)
-            print("Exception type: ", type(e))
-        
+        env_wp = self.env['op.work.package']
+        project_url = env_wp.get_projects_url()
+        response = env_wp.get_response(project_url)
+
+        wp_ref = datetime.now().strftime("%Y-%m-%d")
+        start_date = datetime.now()
+        due_date = datetime.now + 4
+        subject = "autoTask"
+
+        for r in response['_embedded']['elements']:
+            _project_id = r['id']
+            work_package_url = env_wp.get_project_workpackages_url(_project_id)
+
+            response = self.post_response(work_package_url, env_wp.get_payload(_project_id, wp_ref, subject, start_date, due_date))
             
-        
+        """TODO:
+            http://localhost:3000/api/v3/projects/1843
+            1. get memberships href and go over each membership
+            2. get principal->user id from href
+            2.1 save the members in a dictionary?
+            3. create task in project_id with those members 
+            3.1 create task
+            3.2 get url for task
+            3.3 go over the task and add assignee(s) and responsible"""

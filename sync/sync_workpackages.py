@@ -1,12 +1,8 @@
 from requests.models import HTTPBasicAuth
 from odoo import models, fields, api
 from odoo.exceptions import UserError
-import requests
 import json
 import hashlib
-from base64 import b64encode
-from pprint import pprint
-from dateutil import parser
 from datetime import datetime
 import isodate
 import json
@@ -14,16 +10,18 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+
 class NonStopException(UserError):
     """Will bypass the record"""
 
-class SyncWorkPackages(models.TransientModel):
+
+class SyncWorkPackages(models.AbstractModel):
 
     _name = 'sync.workpackages'
     _description = 'Synchronize Work Packages'
     hashed_wp = hashlib.sha256()
     hashed_op_wp = hashlib.sha256()
-    limit=50
+    limit=10
 
     def get_hashed(self,_id,project_id,name,description,spent_time,author_id,responsible_id):
         hashable=json.dumps(_id) + json.dumps(project_id) + name + description + json.dumps(spent_time) + str(author_id) + str(responsible_id)
