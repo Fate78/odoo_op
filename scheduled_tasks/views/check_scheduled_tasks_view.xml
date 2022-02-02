@@ -1,0 +1,18 @@
+<odoo>
+    <data>
+       
+    <!-- cron-->
+        <record id="check_schedules_cron" model="ir.cron">
+            <field name="name">Check Scheduled Tasks</field>
+            <field name="type">ir.actions.server</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="model_id" ref="model_check_schedules"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_check_scheduled_tasks()</field>
+        </record>
+     <!-- end cron-->
+    </data>
+</odoo>
