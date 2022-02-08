@@ -10,8 +10,8 @@
               <group>
                 <field name="name" />
                 <field name="db_project_id"/>
-                <field name="op_responsible_id" />
-                <field name="op_author_id" />
+                <field name="db_responsible_id" />
+                <field name="db_author_id" />
                 <field name="spent_time"/>
               </group>
               <group>
@@ -29,8 +29,8 @@
         <tree>
           <field name="name" />
           <field name="db_project_id"/>
-          <field name="op_responsible_id" />
-          <field name="op_author_id" />
+          <field name="db_responsible_id" />
+          <field name="db_author_id" />
           <field name="spent_time"/>
         </tree>
       </field>

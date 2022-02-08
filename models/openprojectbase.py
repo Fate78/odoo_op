@@ -16,7 +16,7 @@ class OpenProjectBaseMethods(models.AbstractModel):
     #Searches the database of a model for data that hasn't been updated in a certain time (1.5 days)
     def get_data_to_update(self,model,limit):
         now=datetime.now()
-        comp_date = now - timedelta(minutes=2) #defines the interval of time of when to check
+        comp_date = now - timedelta(minutes=1) #defines the interval of time of when to check
         data=self.env[model].search([['write_date','<',comp_date,]],limit=limit)
         return data
     
@@ -80,6 +80,15 @@ class OpenProjectBaseMethods(models.AbstractModel):
         main_url = "%s%s" % (base_path,endpoint_url)
         return main_url
 
+    def check_next_offset(self, next_offset, response):
+        next_offset = False
+        for r in response['_links']:
+            if 'nextByOffset' in r:
+                next_offset=True
+                main_url = "%s%s" % (self.base_path, response['_links']['nextByOffset']['href'])
+                response = self.get_response(main_url)
+                print(next_offset)
+        return next_offset, response
 
 """Abstract class with methods and fields that interact with the tables"""
 class OpenProjectBase(models.AbstractModel):
@@ -183,9 +192,9 @@ class WorkPackage(models.Model):
 
         return "%s%s" % (base_path,endpoint_url)
     
-    def get_payload(self, project_id, responsible_id, assignee_id, wp_ref, subject, description,start_date, due_date):
+    def get_payload(self, project_id, responsible_id, subject, description,start_date, due_date):
         payload = {
-            "subject": "%s%s" % (subject, wp_ref),
+            "subject": "%s" % subject,
             "description": {
                 "format": "markdown",
                 "raw": description,
@@ -220,7 +229,7 @@ class WorkPackage(models.Model):
                     "href": "/api/v3/users/%s" % responsible_id
                 },
                 "assignee": {
-                    "href": "/api/v3/users/%s" % assignee_id
+                    "href": None
                 },
                 "version": {
                     "href": None
@@ -297,8 +306,6 @@ class ScheduledTasks(models.Model):
     description = fields.Char(string="Description", readonly=False, required=False,default="")
     frequency = fields.Selection([('daily', 'Daily'), ('weekly', 'Weekly'), ('monthly', 'Monthly')], 
                 string='Frequency', required=False, default='daily')
-    # users = fields.Selection(_get_users(),string='Users')
-
 
     """TODO:
         1. criar cron que verifica se é necessário correr os crons de criação de tasks
