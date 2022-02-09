@@ -30,11 +30,9 @@ class SyncVersions(models.AbstractModel):
     def cron_sync_versions(self):
         # Loop through every project
         env_version = self.env['op.project.version']
-        projects_url = self.env['op.project'].get_projects_url()
-        response = self.env['op.project'].get_response(projects_url)
-        for r in response['_embedded']['elements']:
-            _id_project = r['id']
-            main_url = env_version.get_project_versions_url(_id_project)
+        next_offset = True
+        while next_offset:
+            main_url = env_version.get_versions_url()
             response_ver = env_version.get_response(main_url)
             if(response_ver['_type']!="Error"):
                 for rv in response_ver['_embedded']['elements']:
@@ -42,13 +40,14 @@ class SyncVersions(models.AbstractModel):
                     _name = rv['name']
                     _description = rv['description']['raw']
                     _status = rv['status']
+                    _id_project = env_version.get_id_href(rv['_links']['definingProject']['href'])
                     versions=env_version.get_data_to_update('op.project.version',self.limit)
                     version_search_id=env_version.search([['db_id','=',_id]])
                     if(version_search_id.exists()):
                         for v in versions:
                             if(v.db_id==_id):
                                 v_db_id=v.db_id
-                                v_db_project_id=v.db_project_id
+                                v_db_project_id=str(v.db_project_id)
                                 v_name=v.name
                                 v_description=env_version.verify_field_empty(v.description)
                                 v_status=v.status
@@ -93,5 +92,6 @@ class SyncVersions(models.AbstractModel):
                             print("Exception type: ", type(e))
             else:
                 print("Permission denied to project %d" % (_id_project))
-        self.env.cr.commit()
-        print("All data commited")
+            next_offset, response_ver = env_version.check_next_offset(next_offset, response_ver)
+            self.env.cr.commit()
+            print("All data commited")

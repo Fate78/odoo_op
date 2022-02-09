@@ -87,7 +87,6 @@ class OpenProjectBaseMethods(models.AbstractModel):
                 next_offset=True
                 main_url = "%s%s" % (self.base_path, response['_links']['nextByOffset']['href'])
                 response = self.get_response(main_url)
-                print(next_offset)
         return next_offset, response
 
 """Abstract class with methods and fields that interact with the tables"""
@@ -191,7 +190,13 @@ class WorkPackage(models.Model):
         endpoint_url = "/api/v3/projects/%s/work_packages" % (project)
 
         return "%s%s" % (base_path,endpoint_url)
-    
+
+    def get_workpackages_url(self):
+        base_path = self.base_path
+        endpoint_url = "/api/v3/work_packages"
+
+        return "%s%s" % (base_path,endpoint_url)
+
     def get_payload(self, project_id, responsible_id, subject, description,start_date, due_date):
         payload = {
             "subject": "%s" % subject,
@@ -283,6 +288,11 @@ class Versions(models.Model):
 
         return "%s%s" % (base_path,endpoint_url)
 
+    def get_versions_url(self):
+        base_path = self.base_path
+        endpoint_url = "/api/v3/versions"
+
+        return "%s%s" % (base_path,endpoint_url)
 
 class ScheduledTasks(models.Model):
     _name = 'op.scheduled.tasks'
