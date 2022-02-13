@@ -112,7 +112,7 @@ class Project(models.Model):
 
     # Real Odoo model records
     op_identifier = fields.Char(
-        string="Identifier (OP)", readonly=True, required=True, default=0)
+        string="Identifier (OP)", readonly=True, required=True)
     name = fields.Char(string="Name", readonly=False,
                        required=True)
     public = fields.Boolean('Is Public', help='Is this a public project?', readonly=False, required=True)
@@ -173,7 +173,7 @@ class WorkPackage(models.Model):
 
     # As in OP database is
     db_project_id = fields.Integer('Project (OP_DB)', readonly=True, help="Stores the id from OP", index=True,
-                                   required=True, default=0)
+                                   required=True)
     db_responsible_id = fields.Integer('Responsible (OP_DB)', readonly=True, help="Stores the id from OP",
                                        required=False)
     db_author_id = fields.Integer('Author (OP_DB)', readonly=True, help="Stores the id from OP", required=True)
@@ -254,11 +254,10 @@ class TimeEntries(models.Model):
     _description = 'Time Entries'
 
     # As in OP database is
-    db_project_id = fields.Integer('Project (OP_DB)', readonly=True, required=True, help="Stores the id from OP", default=0)
-    db_user_id = fields.Integer('User (OP_DB)', readonly=True, required=True, help="Stores the id from OP", default=0)
-    db_work_package_id = fields.Integer('Ticket (OP_DB)', readonly=True, required=True, help="Stores the id from OP", default=0)
-    db_activity_id = fields.Integer('Activity (OP_DB)', readonly=True, required=True, help="Stores the id from OP", default=0)
-
+    db_project_id = fields.Integer('Project (OP_DB)', readonly=True, required=True, help="Stores the id from OP")
+    db_user_id = fields.Integer('User (OP_DB)', readonly=True, required=True, help="Stores the id from OP")
+    db_work_package_id = fields.Integer('WP (OP_DB)', readonly=True, required=True, help="Stores the id from OP")
+    db_activity_id = fields.Integer('Activity (OP_DB)', readonly=True, required=False, help="Stores the id from OP")
     # Real Odoo model records
     comment = fields.Char(string="Comment", readonly=False, required=False, default='')
     op_hours = fields.Float('Hours', readonly=False, required=True)
@@ -276,7 +275,7 @@ class Versions(models.Model):
     _inherit = ['openproject.base']
     _description = "Project Versions"
 
-    db_project_id = fields.Integer('Project (OP_DB)', readonly=True, required=True, help="Stores the id from OP", default=0)
+    db_project_id = fields.Integer('Project (OP_DB)', readonly=True, required=True, help="Stores the id from OP")
 
     name = fields.Char(string="Name", readonly=False, required=True)
     description = fields.Char(string="Description", readonly=False, required=False,default="")
@@ -316,7 +315,7 @@ class ScheduledTasks(models.Model):
     description = fields.Char(string="Description", readonly=False, required=False,default="")
     frequency = fields.Selection([('daily', 'Daily'), ('weekly', 'Weekly'), ('monthly', 'Monthly')], 
                 string='Frequency', required=False, default='daily')
-
+    active = fields.Boolean('Is Active', help='Is this an active scheduled task?', readonly=False, required=True, default=True)
     """TODO:
         1. criar cron que verifica se é necessário correr os crons de criação de tasks
         2. pesquisa na tabela scheduled_tasks se existem crons diários

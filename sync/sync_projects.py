@@ -48,13 +48,13 @@ class SyncProjects(models.AbstractModel):
                 if(project_search_id.exists()):
                     for p in projects:
                         if(p.db_id == _id):
-                            p_db_id=p.db_id
-                            p_op_identifier=p.op_identifier
-                            p_name=p.name
-                            p_public=p.public
-                            p_active=p.active
-                            p_description=env_project.verify_field_empty(p.description)
-                            _description=env_project.verify_field_empty(_description)
+                            p_db_id = p.db_id
+                            p_op_identifier = p.op_identifier
+                            p_name = p.name
+                            p_public = p.public
+                            p_active = p.active
+                            p_description = env_project.verify_field_empty(p.description)
+                            _description = env_project.verify_field_empty(_description)
                             #Initialize description if it's None
 
                             hashed_project = self.get_hashed(p_db_id,p_op_identifier,p_name,p_public,p_description,p_active)

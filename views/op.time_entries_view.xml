@@ -12,7 +12,6 @@
                 <field name="db_project_id"/>
                 <field name="db_user_id"/>
                 <field name="db_work_package_id"/>
-                <field name="db_activity_id"/>
                 <field name="comment" />
                 <field name="op_hours" />
                 <field name="op_spent_on" />
@@ -33,7 +32,6 @@
           <field name="db_project_id"/>
           <field name="db_user_id"/>
           <field name="db_work_package_id"/>
-          <field name="db_activity_id"/>
           <field name="comment" />
           <field name="op_hours" />
           <field name="op_spent_on" />

@@ -11,6 +11,7 @@
                 <field name="name"/>
                 <field name="description" />
                 <field name="frequency" />
+                <field name="active" />
               </group>
               <group></group>
             </group>
@@ -27,6 +28,7 @@
           <field name="name"/>
           <field name="description" />
           <field name="frequency" />
+          <field name="active" />
         </tree>
       </field>
     </record>
