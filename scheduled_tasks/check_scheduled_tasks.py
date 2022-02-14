@@ -6,6 +6,10 @@ from datetime import datetime
 from datetime import timedelta
 import hashlib
 import json
+import logging
+
+_logger = logging.getLogger(__name__)
+
 
 """Este cron vais percorrer o model das Scheduled tasks e verificar se existem daily tasks
     Caso existam daily tasks vai adicioná-las ao OpenProject"""
@@ -20,8 +24,7 @@ class PostWorkPackages(models.AbstractModel):
         project_id = env_wp.verify_field_empty(project_id)
         name = env_wp.verify_field_empty(name)
         responsible_id = env_wp.verify_field_empty(responsible_id)
-        print(project_id, name, responsible_id)
-        hashable = json.dumps(project_id) + name + responsible_id
+        hashable = str(project_id) + name + responsible_id
         hashed = hashlib.md5(hashable.encode("utf-8")).hexdigest()
         return hashed
 
@@ -29,30 +32,17 @@ class PostWorkPackages(models.AbstractModel):
         env = self.env['op.work.package']
         response = env.post_response(main_url, env.get_payload(project_id, responsible_id, name, description,start_date, due_date))
 
-    def get_response_project_gen(self,project_url_list):
+    def get_memberships_href(self,p_url):
         env_wp = self.env['op.work.package']
-        for p_url in project_url_list:
-            response_project_gen = env_wp.get_response(p_url)
-            yield response_project_gen
+        response_project = env_wp.get_response(p_url)
+        memberships_href = response_project['_links']['memberships']['href']
 
-    def get_memberships_href_gen(self,response_project_gen):
-        env_wp = self.env['op.work.package']
-        for rp in response_project_gen:
-            memberships_href_gen = env_wp.base_path + rp['_links']['memberships']['href']
-            yield memberships_href_gen
+        return memberships_href
 
-    def get_response_members_gen(self,memberships_href_gen):
-        env_wp = self.env['op.work.package']
-        for m_url in memberships_href_gen:
-            response_members_gen = env_wp.get_response(m_url)
-            yield response_members_gen
-
-    def post_daily_task(self,name,description):
+    def post_daily_task(self, name, description, project_id):
         hashed_op = hashlib.sha256()
         hashed_new = hashlib.sha256()
         env_wp = self.env['op.work.package']
-        projects_page_url = env_wp.get_projects_url()
-        response = env_wp.get_response(projects_page_url)
         wp_page_url = env_wp.get_workpackages_url()
         response_work_package = env_wp.get_response(wp_page_url)
         
@@ -62,65 +52,67 @@ class PostWorkPackages(models.AbstractModel):
         wp_name = name + "_" + wp_ref
         is_admin=None
         admin_id=None
-        
-        next_offset_project = True
+        task_exists=None
+
         next_offset_wp = True
         next_offset_memb = True
-        
-        project_url_list = []
-        post_wp_url_list = []
-        while next_offset_project:
-            #Get project members
-            for r in response['_embedded']['elements']:
-                project_id = r['id']
-                if(r['active']!=False):
-                    post_wp_url_list.append(env_wp.get_project_workpackages_url(project_id))
-                    project_url_list.append(env_wp.get_project_url(project_id))
-            next_offset_project, response = env_wp.check_next_offset(next_offset_project, response)
 
-        response_project_gen = self.get_response_project_gen(project_url_list)
-        memberships_href_gen = self.get_memberships_href_gen(response_project_gen)
-        response_members_gen = self.get_response_members_gen(memberships_href_gen)
-        
-        for u in response_members_gen:
-            if(u['count']!=0):
+        project_url = env_wp.get_project_url(project_id)
+        memberships_href = self.get_memberships_href(project_url)
+        response_members = env_wp.get_response(env_wp.base_path + memberships_href)
+        project_wp_url = env_wp.get_project_workpackages_url(project_id)
+
+        try:
+            if(response_members['count']!=0):
                 while next_offset_memb:
-                    for i in u['_embedded']['elements']:
+                    for i in response_members['_embedded']['elements']:
                         user_id = env_wp.get_id_href(i['_links']['principal']['href'])
-                        project_id = env_wp.get_id_href(i['_links']['project']['href'])
                         for r in i['_links']['roles']:
                             role_id = env_wp.get_id_href(r['href'])
                             if(role_id=="3"):
                                 is_admin=True
                                 admin_id=user_id
                                 print("admin id: ", admin_id)
-                        while next_offset_wp:
-                            for rw in response_work_package['_embedded']['elements']:
-                                print(rw)
-                                _name = rw['subject']
-                                _id_project = env_wp.get_id_href(rw['_links']['project']['href'])
-                                _responsible = env_wp.verify_field_empty(rw['_links']['responsible']['href'])
-                                _responsible = env_wp.get_id_href(_responsible)
-                                hashed_op = self.get_hashed(_id_project, _name, _responsible)
-                                hashed_new = self.get_hashed(project_id, wp_name, admin_id)
-                                if(hashed_op!=hashed_new):
-                                    for url in post_wp_url_list:
-                                        print("post_wp:",url)
-                                        if(is_admin==True):
-                                            #post_work_package = env_wp.post_response(url, env_wp.get_payload(project_id, admin_id, wp_name, description, start_date, due_date))
-                                            print("Posting WP: ", hashed_new)       
-                                        else:
-                                            print("The Project needs a project admin")
-                            next_offset_wp, response_work_package = env_wp.check_next_offset(next_offset_wp, response_work_package)
-                    next_offset_memb, response = env_wp.check_next_offset(next_offset_memb, response)
-    
+                        #Verify if task has already been created in case the cron is running more than once 
+                            while next_offset_wp:
+                                for rw in response_work_package['_embedded']['elements']:
+                                    _name = rw['subject']
+                                    _id_project = env_wp.get_id_href(rw['_links']['project']['href'])
+                                    _responsible = env_wp.verify_field_empty(rw['_links']['responsible']['href'])
+                                    _responsible = env_wp.get_id_href(_responsible)
+                                    hashed_op = self.get_hashed(_id_project, _name, _responsible)
+                                    hashed_new = self.get_hashed(project_id, wp_name, admin_id)
+                                    if(hashed_op==hashed_new):
+                                        task_exists=True
+                                        print(("Task: %s has already been created") % (_name))
+                
+                                next_offset_wp, response_work_package = env_wp.check_next_offset(next_offset_wp, response_work_package)
+                            
+                        next_offset_memb, response_members = env_wp.check_next_offset(next_offset_memb, response_members)
+            if(task_exists==False and is_admin==True):
+                print("post_wp:", project_wp_url)
+                post_work_package = env_wp.post_response(project_wp_url, env_wp.get_payload(project_id, admin_id, wp_name, description, start_date, due_date))
+                print("Posting WP: ", project_id, admin_id, wp_name, description, start_date, due_date) 
+        except Exception as e:
+            _logger.error('Error: %s' % e)
+
     def cron_check_scheduled_tasks(self):
         env_s_tasks = self.env['op.scheduled.tasks']
         tasks = env_s_tasks.get_data(self.limit)
+        now=datetime.now()
+        
         for t in tasks:
             t_name = t.name
             t_frequency = t.frequency
+            t_project = t.projects.db_id
             t_description = env_s_tasks.verify_field_empty(t.description)
-            
+            t_interval = t.interval
             if(t_frequency=="daily"):
-                self.post_daily_task(t_name, t_description)
+                comp_date = now - timedelta(days=t_interval)
+                #Verify the last time the cron ran and if it's been more than a day run it
+                if(t.write_date<comp_date):
+                    self.post_daily_task(t_name, t_description, t_project)
+                    #t.write({'write_date':datetime.now()})
+        #If the work_package was added then write_date on the scheduled_task
+        #Check the last write_date of the scheduled task
+        #If daily then check write_date - x days -> x = t.interval

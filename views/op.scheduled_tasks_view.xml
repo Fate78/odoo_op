@@ -11,6 +11,7 @@
                 <field name="name"/>
                 <field name="description" />
                 <field name="frequency" />
+                <field name="projects" />
                 <field name="active" />
               </group>
               <group></group>
@@ -28,6 +29,7 @@
           <field name="name"/>
           <field name="description" />
           <field name="frequency" />
+          <field name="projects" />
           <field name="active" />
         </tree>
       </field>

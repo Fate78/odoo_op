@@ -298,13 +298,6 @@ class ScheduledTasks(models.Model):
     _description = "Scheduled Tasks"
     _inherit = ['openproject.base_methods']
 
-    def _get_users(self):
-        users = self.env['op.user'].sudo().search([])
-        lst = []
-        for u in users:
-            lst.append((users.id,users.name))
-        return lst
-
     def get_data(self,limit):
         now=datetime.now()
         comp_date = now - timedelta(minutes=1) #defines the interval of time of when to check
@@ -313,8 +306,14 @@ class ScheduledTasks(models.Model):
 
     name = fields.Char(string="Name", readonly=False, required=True)
     description = fields.Char(string="Description", readonly=False, required=False,default="")
+    #add onchange method so that:
+    #daily->1,2,3,4,
+    #weekly->1,2,3
+    #monthly->1,2,3
+    interval = fields.Integer(string="Interval", required=True, default=1)
     frequency = fields.Selection([('daily', 'Daily'), ('weekly', 'Weekly'), ('monthly', 'Monthly')], 
                 string='Frequency', required=False, default='daily')
+    projects = fields.Many2one('op.project', string="Project")
     active = fields.Boolean('Is Active', help='Is this an active scheduled task?', readonly=False, required=True, default=True)
     """TODO:
         1. criar cron que verifica se é necessário correr os crons de criação de tasks
