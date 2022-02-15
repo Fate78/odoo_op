@@ -12,6 +12,7 @@
                 <field name="description" />
                 <field name="frequency" />
                 <field name="projects" />
+                <field name="run_today" />
                 <field name="active" />
               </group>
               <group></group>

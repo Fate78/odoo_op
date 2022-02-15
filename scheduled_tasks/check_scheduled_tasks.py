@@ -1,4 +1,5 @@
 from pdb import post_mortem
+from time import time
 from requests.models import HTTPBasicAuth
 from odoo import models, fields, api
 from odoo.exceptions import UserError
@@ -39,7 +40,16 @@ class PostWorkPackages(models.AbstractModel):
 
         return memberships_href
 
-    def post_daily_task(self, name, description, project_id):
+    def get_start_due_date(self, t_run_today):
+        #If run_today==False then start_date is tomorrow 
+        if(t_run_today==True):
+            start_date = datetime.now().strftime("%Y-%m-%d")
+        else:
+            start_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+        due_date = start_date + timedelta(days=4)
+        return start_date, due_date
+
+    def post_daily_task(self, name, description, project_id, t_run_today):
         hashed_op = hashlib.sha256()
         hashed_new = hashlib.sha256()
         env_wp = self.env['op.work.package']
@@ -47,8 +57,7 @@ class PostWorkPackages(models.AbstractModel):
         response_work_package = env_wp.get_response(wp_page_url)
         
         wp_ref = datetime.now().strftime("%Y-%m-%d")
-        start_date = datetime.now().strftime("%Y-%m-%d")
-        due_date = (datetime.now() + timedelta(days=4)).strftime("%Y-%m-%d")
+        start_date, due_date = self.get_start_due_date(t_run_today)
         wp_name = name + "_" + wp_ref
         is_admin=None
         admin_id=None
@@ -85,7 +94,9 @@ class PostWorkPackages(models.AbstractModel):
                                     if(hashed_op==hashed_new):
                                         task_exists=True
                                         print(("Task: %s has already been created") % (_name))
-                
+                                    else:
+                                        task_exists=False
+                                        print("Task has not been created")
                                 next_offset_wp, response_work_package = env_wp.check_next_offset(next_offset_wp, response_work_package)
                             
                         next_offset_memb, response_members = env_wp.check_next_offset(next_offset_memb, response_members)
@@ -107,12 +118,40 @@ class PostWorkPackages(models.AbstractModel):
             t_project = t.projects.db_id
             t_description = env_s_tasks.verify_field_empty(t.description)
             t_interval = t.interval
+            t_run_today = t.run_today
+
+            #Verify the last time the cron ran and if it's been more than a day run it
             if(t_frequency=="daily"):
                 comp_date = now - timedelta(days=t_interval)
-                #Verify the last time the cron ran and if it's been more than a day run it
+                print("Daily task: ", t.write_date)
+                print("Now: ", comp_date)
+                print("Run Today: ", t_run_today)
+                if(t.write_date<comp_date or t_run_today==True):
+                    try:
+                        print("Going for a run")
+                        self.post_daily_task(t_name, t_description, t_project, t_run_today)
+                        tasks.write({'run_today':False, 'write_date':now})
+                    except Exception as e:
+                        _logger.error('Error: %s' % e)
+
+            elif(t_frequency=="weekly" or t_run_today==True):
+                comp_date = now - timedelta(weeks=t_interval)
+                print("Weekly task: ", t.write_date)
+                print("Now: ", comp_date)
                 if(t.write_date<comp_date):
-                    self.post_daily_task(t_name, t_description, t_project)
-                    #t.write({'write_date':datetime.now()})
-        #If the work_package was added then write_date on the scheduled_task
-        #Check the last write_date of the scheduled task
-        #If daily then check write_date - x days -> x = t.interval
+                    try:
+                        self.post_daily_task(t_name, t_description, t_project, t_run_today)
+                        tasks.write({'run_today':False, 'write_date':now})
+                    except Exception as e:
+                        _logger.error('Error: %s' % e)
+
+            elif(t_frequency=="monthly" or t_run_today==True):
+                comp_date = now - timedelta(months=t_interval)
+                print("Monthly task: ", t.write_date)
+                print("Now: ", comp_date)
+                if(t.write_date<comp_date):
+                    try:
+                        self.post_daily_task(t_name, t_description, t_project, t_run_today)
+                        tasks.write({'run_today':False, 'write_date':now})
+                    except Exception as e:
+                        _logger.error('Error: %s' % e)

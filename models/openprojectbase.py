@@ -315,6 +315,7 @@ class ScheduledTasks(models.Model):
                 string='Frequency', required=False, default='daily')
     projects = fields.Many2one('op.project', string="Project")
     active = fields.Boolean('Is Active', help='Is this an active scheduled task?', readonly=False, required=True, default=True)
+    run_today = fields.Boolean('Run Today', help='Should the task run today?', readonly=False, required= True, default=True)
     """TODO:
         1. criar cron que verifica se é necessário correr os crons de criação de tasks
         2. pesquisa na tabela scheduled_tasks se existem crons diários
