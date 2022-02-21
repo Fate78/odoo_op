@@ -1,3 +1,4 @@
+from asyncore import write
 from pdb import post_mortem
 from time import time
 from requests.models import HTTPBasicAuth
@@ -5,6 +6,7 @@ from odoo import models, fields, api
 from odoo.exceptions import UserError
 from datetime import datetime
 from datetime import timedelta
+from dateutil.relativedelta import *
 import hashlib
 import json
 import logging
@@ -29,9 +31,9 @@ class PostWorkPackages(models.AbstractModel):
         hashed = hashlib.md5(hashable.encode("utf-8")).hexdigest()
         return hashed
 
-    def post_work_package(self, project_id, responsible_id, main_url, name, description, start_date, due_date):
+    def post_work_package(self, project_id, responsible_id, main_url, name, description, start_date):
         env = self.env['op.work.package']
-        response = env.post_response(main_url, env.get_payload(project_id, responsible_id, name, description,start_date, due_date))
+        response = env.post_response(main_url, env.get_payload(project_id, responsible_id, name, description,start_date))
 
     def get_memberships_href(self,p_url):
         env_wp = self.env['op.work.package']
@@ -40,25 +42,16 @@ class PostWorkPackages(models.AbstractModel):
 
         return memberships_href
 
-    def get_start_due_date(self, t_run_today):
-        #If run_today==False then start_date is tomorrow 
-        if(t_run_today==True):
-            start_date = datetime.now().strftime("%Y-%m-%d")
-        else:
-            start_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-        due_date = start_date + timedelta(days=4)
-        return start_date, due_date
-
-    def post_daily_task(self, name, description, project_id, t_run_today):
+    def post_scheduled_task(self, name, description, project_id):
         hashed_op = hashlib.sha256()
         hashed_new = hashlib.sha256()
         env_wp = self.env['op.work.package']
         wp_page_url = env_wp.get_workpackages_url()
         response_work_package = env_wp.get_response(wp_page_url)
-        
-        wp_ref = datetime.now().strftime("%Y-%m-%d")
-        start_date, due_date = self.get_start_due_date(t_run_today)
-        wp_name = name + "_" + wp_ref
+        now = datetime.now().strftime("%Y-%m-%d")
+
+        start_date = now
+        wp_name = name + "_" + now
         is_admin=None
         admin_id=None
         task_exists=None
@@ -102,8 +95,8 @@ class PostWorkPackages(models.AbstractModel):
                         next_offset_memb, response_members = env_wp.check_next_offset(next_offset_memb, response_members)
             if(task_exists==False and is_admin==True):
                 print("post_wp:", project_wp_url)
-                post_work_package = env_wp.post_response(project_wp_url, env_wp.get_payload(project_id, admin_id, wp_name, description, start_date, due_date))
-                print("Posting WP: ", project_id, admin_id, wp_name, description, start_date, due_date) 
+                post_work_package = env_wp.post_response(project_wp_url, env_wp.get_payload(project_id, admin_id, wp_name, description, start_date))
+                print("Posting WP: ", project_id, admin_id, wp_name, description, start_date) 
         except Exception as e:
             _logger.error('Error: %s' % e)
 
@@ -111,7 +104,9 @@ class PostWorkPackages(models.AbstractModel):
         env_s_tasks = self.env['op.scheduled.tasks']
         tasks = env_s_tasks.get_data(self.limit)
         now=datetime.now()
-        
+        jan = datetime(2020,1,31)
+        feb = jan + relativedelta(months=+1)
+        print("Feb: ",feb)
         for t in tasks:
             t_name = t.name
             t_frequency = t.frequency
@@ -119,39 +114,55 @@ class PostWorkPackages(models.AbstractModel):
             t_description = env_s_tasks.verify_field_empty(t.description)
             t_interval = t.interval
             t_run_today = t.run_today
+            t_active = t.active
+            t_write_date = t.write_date
+            t_write_date_test = t.write_date_test
 
-            #Verify the last time the cron ran and if it's been more than a day run it
-            if(t_frequency=="daily"):
-                comp_date = now - timedelta(days=t_interval)
-                print("Daily task: ", t.write_date)
-                print("Now: ", comp_date)
-                print("Run Today: ", t_run_today)
-                if(t.write_date<comp_date or t_run_today==True):
-                    try:
-                        print("Going for a run")
-                        self.post_daily_task(t_name, t_description, t_project, t_run_today)
-                        tasks.write({'run_today':False, 'write_date':now})
-                    except Exception as e:
-                        _logger.error('Error: %s' % e)
+            vals = {'run_today':False,
+                    'write_date':now,
+                    'write_date_test':now
+                    }
 
-            elif(t_frequency=="weekly" or t_run_today==True):
-                comp_date = now - timedelta(weeks=t_interval)
-                print("Weekly task: ", t.write_date)
-                print("Now: ", comp_date)
-                if(t.write_date<comp_date):
-                    try:
-                        self.post_daily_task(t_name, t_description, t_project, t_run_today)
-                        tasks.write({'run_today':False, 'write_date':now})
-                    except Exception as e:
-                        _logger.error('Error: %s' % e)
+            if(t_active == True):
+                #Check next run date->compare to now
+                if(t_frequency=="daily"):
+                    next_run_date = t_write_date_test + relativedelta(days=+t_interval)
+                    print("----Daily Task----")
+                    print("Next Run: ", next_run_date)
+                    print("Last Run: ", t_write_date_test)
+                    print("Now: ", now)
+                    if(now>=next_run_date or t_run_today==True):
+                        try:
+                            print("Going for a run")
+                            self.post_scheduled_task(t_name, t_description, t_project)
+                            tasks.write(vals)
+                        except Exception as e:
+                            _logger.error('Error: %s' % e)
 
-            elif(t_frequency=="monthly" or t_run_today==True):
-                comp_date = now - timedelta(months=t_interval)
-                print("Monthly task: ", t.write_date)
-                print("Now: ", comp_date)
-                if(t.write_date<comp_date):
-                    try:
-                        self.post_daily_task(t_name, t_description, t_project, t_run_today)
-                        tasks.write({'run_today':False, 'write_date':now})
-                    except Exception as e:
-                        _logger.error('Error: %s' % e)
+                elif(t_frequency=="weekly"):
+                    next_run_date = t_write_date_test + relativedelta(weeks=+t_interval)
+                    print("----Weekly Task----")
+                    print("Next Run: ", next_run_date)
+                    print("Last Run: ", t_write_date_test)
+                    print("Now: ", now)
+                    if(now>=next_run_date or t_run_today==True):
+                        try:
+                            print("Going for a run")
+                            self.post_scheduled_task(t_name, t_description, t_project)
+                            tasks.write(vals)
+                        except Exception as e:
+                            _logger.error('Error: %s' % e)
+
+                elif(t_frequency=="monthly"):
+                    next_run_date = t_write_date_test + relativedelta(months=+t_interval)
+                    print("----Monthly Task----")
+                    print("Next Run: ", next_run_date)
+                    print("Last Run: ", t_write_date_test)
+                    print("Now: ", now)
+                    if(now>=next_run_date or t_run_today==True):
+                        try:
+                            print("Going for a run")
+                            self.post_scheduled_task(t_name, t_description, t_project)
+                            tasks.write(vals)
+                        except Exception as e:
+                            _logger.error('Error: %s' % e)

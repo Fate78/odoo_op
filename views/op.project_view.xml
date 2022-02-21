@@ -10,12 +10,6 @@
               <group>
                 <field name="name" />
                 <field name="public" />
-                <!-- <field name="partner_id" />
-                <field name="billable" />
-                <field name="default_rate" />
-                <field name="responsible_id" />
-                <field name="currency_id" />
-                <field name="op_activity_ids" /> -->
               </group>
               <group></group>
             </group>
@@ -34,12 +28,6 @@
           <field name="name" />
           <field name="description" />
           <field name="public" />
-          <!-- <field name="partner_id" />
-          <field name="billable" />
-          <field name="default_rate" />
-          <field name="responsible_id" />
-          <field name="currency_id" />
-          <field name="op_activity_ids" /> -->
         </tree>
       </field>
     </record>

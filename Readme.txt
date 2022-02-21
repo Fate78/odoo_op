@@ -4,6 +4,7 @@ INTRODUCTION
 The openproject Odoo module syncs the data between odoo and openproject,
 using the openproject api to transfer its data to odoos database. 
 
+It also has the function of creating automated tasks given a frequency and an interval.
 
 REQUIREMENTS
 ----------------------------------------------------------------------------------------------
@@ -41,3 +42,12 @@ COSTUMIZATION
 
 #TODO
 Variable to costumize the interval of time in which the program will look for updates
+Add a variable for the due date of the task -> Integer (ex. field due_in=4 -> due_date=now + 4 days)
+
+Scheduled Tasks:
+----------------------------------------------------------------------------------------------
+
+In the schedules menu it's possible to add daily, weekly and monthly tasks that will be created in a given interval of time
+An interval of 2 = every 2 days, 2 weeks or 2 months depending on the given frequency.
+
+run_today = True, if you want the start date to be today

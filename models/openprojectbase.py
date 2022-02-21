@@ -89,7 +89,7 @@ class OpenProjectBaseMethods(models.AbstractModel):
                 response = self.get_response(main_url)
         return next_offset, response
 
-"""Abstract class with methods and fields that interact with the tables"""
+"""Abstract class with fields that interact with the tables"""
 class OpenProjectBase(models.AbstractModel):
     _name = 'openproject.base'
     _description = "Abstract Model for other tables"
@@ -98,10 +98,6 @@ class OpenProjectBase(models.AbstractModel):
 
     db_id = fields.Integer(
         'DB_ID', readonly=True, help="Stores the id from OP (OP_DB)", index=True, required=True)
-
-    def get_last_id(self):
-        db_ids = self.search([], limit=1, order="db_id desc")
-        return db_ids and max([n['db_id'] for n in db_ids]) or 0
 
 
 class Project(models.Model):
@@ -126,7 +122,7 @@ class Project(models.Model):
         [('no', 'No'), ('yes', 'Yes')], string='Billable', required=False, default='no')
     default_rate = fields.Monetary(
         string='Default Rate', required=False, default=0.0)
-    responsible_id = fields.Many2one('op.user', string='Responsible')
+    responsible_id = fields.Many2one('op.user', string='Responsible') #responsible_id is in workpackages
     currency_id = fields.Many2one('res.currency', string='Currency', required=False,
                                   default=lambda self: self.env.user.company_id.currency_id)
 
@@ -182,8 +178,8 @@ class WorkPackage(models.Model):
     name = fields.Char(string="Name", readonly=False, required=True)
     description = fields.Char(string="Description", readonly=False, required=False, default='')
     spent_time = fields.Float('Spent Time', readonly=False, required=True, default=0.0)
-    op_responsible_id = fields.Many2one('op.user', string='Responsible', index=True, readonly=False, required=False)
-    op_author_id = fields.Many2one('op.user', string='Author', index=True, readonly=False, required=False)
+    # op_responsible_id = fields.Many2one('op.user', string='Responsible', index=True, readonly=False, required=False)
+    # op_author_id = fields.Many2one('op.user', string='Author', index=True, readonly=False, required=False)
 
     def get_project_workpackages_url(self,project):
         base_path = self.base_path
@@ -197,7 +193,7 @@ class WorkPackage(models.Model):
 
         return "%s%s" % (base_path,endpoint_url)
 
-    def get_payload(self, project_id, responsible_id, subject, description,start_date, due_date):
+    def get_payload(self, project_id, responsible_id, subject, description, start_date):
         payload = {
             "subject": "%s" % subject,
             "description": {
@@ -207,7 +203,7 @@ class WorkPackage(models.Model):
             },
             "scheduleManually": False,
             "startDate": start_date,
-            "dueDate": due_date,
+            "dueDate": None,
             "estimatedTime": None,
             "percentageDone": 0,
             "remainingTime": None,
@@ -306,19 +302,12 @@ class ScheduledTasks(models.Model):
 
     name = fields.Char(string="Name", readonly=False, required=True)
     description = fields.Char(string="Description", readonly=False, required=False,default="")
-    #add onchange method so that:
-    #daily->1,2,3,4,
-    #weekly->1,2,3
-    #monthly->1,2,3
     interval = fields.Integer(string="Interval", required=True, default=1)
     frequency = fields.Selection([('daily', 'Daily'), ('weekly', 'Weekly'), ('monthly', 'Monthly')], 
                 string='Frequency', required=False, default='daily')
     projects = fields.Many2one('op.project', string="Project")
     active = fields.Boolean('Is Active', help='Is this an active scheduled task?', readonly=False, required=True, default=True)
     run_today = fields.Boolean('Run Today', help='Should the task run today?', readonly=False, required= True, default=True)
+    write_date_test = fields.Datetime(string='Write Date Test', readonly=False, required=True, default=fields.Datetime.now)
     """TODO:
-        1. criar cron que verifica se é necessário correr os crons de criação de tasks
-        2. pesquisa na tabela scheduled_tasks se existem crons diários
-        3. caso existam corre-os
-        4. pesquisa na tabela se existem crons semanais/mensais para aquele dia
-        5. caso existam corre-os"""
+        1. Find a way to test the dates"""
