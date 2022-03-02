@@ -23,12 +23,13 @@ class PostWorkPackages(models.AbstractModel):
 
     def get_hashed(self, project_id, name, responsible_id):
         env_wp = self.env['op.work.package']
-    
         project_id = env_wp.verify_field_empty(project_id)
         name = env_wp.verify_field_empty(name)
         responsible_id = env_wp.verify_field_empty(responsible_id)
+
         hashable = str(project_id) + name + responsible_id
         hashed = hashlib.md5(hashable.encode("utf-8")).hexdigest()
+        print("Inside Hash: ", hashable)
         return hashed
 
     def post_work_package(self, project_id, responsible_id, main_url, name, description, start_date):
@@ -74,7 +75,6 @@ class PostWorkPackages(models.AbstractModel):
                             if(role_id=="3"):
                                 is_admin=True
                                 admin_id=user_id
-                                print("admin id: ", admin_id)
                         #Verify if task has already been created in case the cron is running more than once 
                             while next_offset_wp:
                                 for rw in response_work_package['_embedded']['elements']:
@@ -86,15 +86,12 @@ class PostWorkPackages(models.AbstractModel):
                                     hashed_new = self.get_hashed(project_id, wp_name, admin_id)
                                     if(hashed_op==hashed_new):
                                         task_exists=True
-                                        print(("Task: %s has already been created") % (_name))
                                     else:
                                         task_exists=False
-                                        print("Task has not been created")
                                 next_offset_wp, response_work_package = env_wp.check_next_offset(next_offset_wp, response_work_package)
                             
                         next_offset_memb, response_members = env_wp.check_next_offset(next_offset_memb, response_members)
             if(task_exists==False and is_admin==True):
-                print("post_wp:", project_wp_url)
                 post_work_package = env_wp.post_response(project_wp_url, env_wp.get_payload(project_id, admin_id, wp_name, description, start_date))
                 print("Posting WP: ", project_id, admin_id, wp_name, description, start_date) 
         except Exception as e:
@@ -104,9 +101,7 @@ class PostWorkPackages(models.AbstractModel):
         env_s_tasks = self.env['op.scheduled.tasks']
         tasks = env_s_tasks.get_data(self.limit)
         now=datetime.now()
-        jan = datetime(2020,1,31)
-        feb = jan + relativedelta(months=+1)
-        print("Feb: ",feb)
+
         for t in tasks:
             t_name = t.name
             t_frequency = t.frequency
@@ -118,7 +113,8 @@ class PostWorkPackages(models.AbstractModel):
             t_write_date = t.write_date
             t_write_date_test = t.write_date_test
 
-            vals = {'run_today':False,
+            vals = {
+                    'run_today':False,
                     'write_date':now,
                     'write_date_test':now
                     }
@@ -128,9 +124,9 @@ class PostWorkPackages(models.AbstractModel):
                 if(t_frequency=="daily"):
                     next_run_date = t_write_date_test + relativedelta(days=+t_interval)
                     print("----Daily Task----")
+                    print("Now: ", now)
                     print("Next Run: ", next_run_date)
                     print("Last Run: ", t_write_date_test)
-                    print("Now: ", now)
                     if(now>=next_run_date or t_run_today==True):
                         try:
                             print("Going for a run")
@@ -142,9 +138,9 @@ class PostWorkPackages(models.AbstractModel):
                 elif(t_frequency=="weekly"):
                     next_run_date = t_write_date_test + relativedelta(weeks=+t_interval)
                     print("----Weekly Task----")
+                    print("Now: ", now)
                     print("Next Run: ", next_run_date)
                     print("Last Run: ", t_write_date_test)
-                    print("Now: ", now)
                     if(now>=next_run_date or t_run_today==True):
                         try:
                             print("Going for a run")
@@ -156,9 +152,9 @@ class PostWorkPackages(models.AbstractModel):
                 elif(t_frequency=="monthly"):
                     next_run_date = t_write_date_test + relativedelta(months=+t_interval)
                     print("----Monthly Task----")
+                    print("Now: ", now)
                     print("Next Run: ", next_run_date)
                     print("Last Run: ", t_write_date_test)
-                    print("Now: ", now)
                     if(now>=next_run_date or t_run_today==True):
                         try:
                             print("Going for a run")

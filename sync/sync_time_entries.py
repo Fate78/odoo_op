@@ -25,9 +25,9 @@ class SyncTimeEntries(models.AbstractModel):
     limit=5
 
     def get_hashed(self,_id, _project_id, _user_id, _work_package_id, _activity_id, _hours, _spentOn, _comment):
-        hashable=json.dumps(_id) + str(_project_id) + str(_user_id) + str(_work_package_id) + str(_activity_id) + str(_hours) + str(_spentOn) + _comment
-        print("Inside Hash: ", hashable)
+        hashable=str(_id) + str(_project_id) + str(_user_id) + str(_work_package_id) + str(_activity_id) + str(_hours) + str(_spentOn) + _comment
         hashed=hashlib.md5(hashable.encode("utf-8")).hexdigest()
+        print("Inside Hash: ", hashed)
         return hashed
 
     def cron_sync_time_entries(self):
@@ -67,9 +67,7 @@ class SyncTimeEntries(models.AbstractModel):
                                                                     t_db_activity_id, t_op_hours, t_op_spent_on, t_comment)  
                             hashed_op_time_entry = self.get_hashed(_id, _project_id, _user_id, _work_package_id, _activity_id, 
                                                                     _hours_float, _spentOn, _comment)
-                            print("Time Entry: ",t.db_id)
-                            print(hashed_time_entry)
-                            print(hashed_op_time_entry)
+                                                                    
                             if(hashed_time_entry!=hashed_op_time_entry):
                                 try:
                                     print("Updating Time Entry: %s\n"%(t.db_id))

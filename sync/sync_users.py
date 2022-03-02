@@ -24,9 +24,9 @@ class SyncUsers(models.AbstractModel):
     limit=5
 
     def get_hashed(self,_id,_firstname,_lastname,_login,_email,_admin):
-        hashable=json.dumps(_id) + _firstname + _lastname + _login + _email + json.dumps(_admin)
-        print("Inside Hash: ", _id,_firstname,_lastname,_login,_email,_admin)
+        hashable=str(_id) + _firstname + _lastname + _login + _email + str(_admin)
         hashed=hashlib.md5(hashable.encode("utf-8")).hexdigest()
+        print("Inside Hash: ", hashed)
         return hashed
 
     def cron_sync_users(self):
@@ -49,7 +49,6 @@ class SyncUsers(models.AbstractModel):
                         if(u.db_id == _id):
                             hashed_user = self.get_hashed(u.db_id,u.firstname,u.lastname,u.login,u.email,u.admin)
                             hashed_op_user = self.get_hashed(_id,_firstname,_lastname,_login,_email,_admin)
-                            print("user: ",u.db_id)
                             
                             if(hashed_user!=hashed_op_user):
                                 try:

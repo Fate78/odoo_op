@@ -23,9 +23,9 @@ class SyncProjects(models.AbstractModel):
     limit=20
 
     def get_hashed(self,_id,identifier,name,public,description,active):
-        hashable=json.dumps(_id) + identifier + name + json.dumps(public) + description + json.dumps(active)
-        print("Inside Hash: ", _id,identifier)
+        hashable=str(_id) + identifier + name + str(public) + description + str(active)
         hashed=hashlib.md5(hashable.encode("utf-8")).hexdigest()
+        print("Inside Hash: ", hashed)
         return hashed
 
     def cron_sync_projects(self):
@@ -35,8 +35,6 @@ class SyncProjects(models.AbstractModel):
         response = env_project.get_response(main_url)
         next_offset = True
         while next_offset:
-            # next_url="%s%s" % (env_project.base_path, response['_links']['nextByOffset']['href'])
-            # next_response, next_status_code = env_project.get_response(next_url)
             for r in response['_embedded']['elements']:
                 project_search_id=env_project.search([['db_id','=',r['id']]])
                 _id = r['id']
@@ -54,12 +52,9 @@ class SyncProjects(models.AbstractModel):
                             p_public = p.public
                             p_active = p.active
                             p_description = env_project.verify_field_empty(p.description)
-                            _description = env_project.verify_field_empty(_description)
-                            #Initialize description if it's None
-
+                            _description = env_project.verify_field_empty(_description) #Initialize description if it's None
                             hashed_project = self.get_hashed(p_db_id,p_op_identifier,p_name,p_public,p_description,p_active)
                             hashed_op_project = self.get_hashed(_id,_identifier,_name,_public,_description,_active)
-                            print("project: ", p.db_id)
                             
                             if(hashed_project!=hashed_op_project):
                                 try:

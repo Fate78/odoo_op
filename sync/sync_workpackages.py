@@ -24,9 +24,9 @@ class SyncWorkPackages(models.AbstractModel):
     limit=20
 
     def get_hashed(self,_id,project_id,name,description,spent_time,author_id,responsible_id):
-        print(type(project_id))
-        hashable=json.dumps(_id) + json.dumps(project_id) + name + description + json.dumps(spent_time) + str(author_id) + str(responsible_id)
+        hashable=str(_id) + str(project_id) + name + description + str(spent_time) + str(author_id) + str(responsible_id)
         hashed=hashlib.md5(hashable.encode("utf-8")).hexdigest()
+        print("Inside Hash: ", hashed)
         return hashed
     
     def cron_sync_workpackages(self):
@@ -69,15 +69,11 @@ class SyncWorkPackages(models.AbstractModel):
                             _responsible_id=env_work_package.verify_field_empty(_responsible_id)
                             
                             hashed_wp = self.get_hashed(w_db_id,w_db_project_id,w_name,w_description,w_spent_time,w_db_author_id,w_db_responsible_id)
-                            print(w_db_id,w_db_project_id,w_name,w_description,w_spent_time,w_db_author_id,w_db_responsible_id)
-                            print(hashed_wp)
-                            
                             hashed_op_wp = self.get_hashed(_id,_id_project,_name,_description,_int_spentTime,_author_id,_responsible_id)
-                            print(_id,_id_project,_name,_description,_int_spentTime,_author_id,_responsible_id)
-                            print(hashed_op_wp)
+                            
                             if(hashed_wp!=hashed_op_wp):
                                 try:
-                                    print("Updating Workpackage...\n")
+                                    print("Updating Workpackage: %s\n" % w_db_id)
                                     vals = {
                                         'db_project_id':_id_project,
                                         'name':_name,
@@ -94,7 +90,7 @@ class SyncWorkPackages(models.AbstractModel):
                                     _logger.error('Error: %s' % e)
                                     self.env.cr.rollback()
                             else:
-                                print("Workpackage up to date\n")
+                                print("Workpackage up to date: %s\n" % w_db_id)
                                 work_package_search_id.write({'write_date':datetime.now()})
                 else:
                     try:

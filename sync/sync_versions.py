@@ -23,8 +23,9 @@ class SyncVersions(models.AbstractModel):
     limit=10
 
     def get_hashed(self,_id,project_id,name,description,status):
-        hashable=json.dumps(_id) + json.dumps(project_id) + name + description + status
+        hashable=str(_id) + str(project_id) + name + description + status
         hashed=hashlib.md5(hashable.encode("utf-8")).hexdigest()
+        print("Inside Hash", hashed)
         return hashed
 
     def cron_sync_versions(self):
@@ -55,11 +56,9 @@ class SyncVersions(models.AbstractModel):
 
                                 hashed_ver = self.get_hashed(v_db_id,v_db_project_id,v_name,v_description,v_status)
                                 hashed_op_ver = self.get_hashed(_id,_id_project,_name,_description,_status)
-                                print(hashed_ver)
-                                print(hashed_op_ver)
                                 if(hashed_ver!=hashed_op_ver):
                                     try:
-                                        print("Updating version...\n")
+                                        print("Updating version: %s\n" % v_db_id)
                                         vals = {
                                             'db_project_id':_id_project,
                                             'name':_name,
@@ -74,7 +73,7 @@ class SyncVersions(models.AbstractModel):
                                         _logger.error('Error: %s' % e)
                                         self.env.cr.rollback()
                                 else:
-                                    print("Version up to date\n")
+                                    print("Version up to date: %s\n" % _id)
                                     version_search_id.write({'write_date':datetime.now()})
                     else:
                         try:

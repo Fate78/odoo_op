@@ -294,12 +294,6 @@ class ScheduledTasks(models.Model):
     _description = "Scheduled Tasks"
     _inherit = ['openproject.base_methods']
 
-    def get_data(self,limit):
-        now=datetime.now()
-        comp_date = now - timedelta(minutes=1) #defines the interval of time of when to check
-        data=self.env['op.scheduled.tasks'].search([['write_date','<',comp_date,]],limit=limit)
-        return data
-
     name = fields.Char(string="Name", readonly=False, required=True)
     description = fields.Char(string="Description", readonly=False, required=False,default="")
     interval = fields.Integer(string="Interval", required=True, default=1)
@@ -309,5 +303,16 @@ class ScheduledTasks(models.Model):
     active = fields.Boolean('Is Active', help='Is this an active scheduled task?', readonly=False, required=True, default=True)
     run_today = fields.Boolean('Run Today', help='Should the task run today?', readonly=False, required= True, default=True)
     write_date_test = fields.Datetime(string='Write Date Test', readonly=False, required=True, default=fields.Datetime.now)
+    processed = fields.Boolean('Processed', help='Has the cron processed this Task?', readonly=True, required= True, default=False)
     """TODO:
-        1. Find a way to test the dates"""
+        Add a Due_Date """
+
+    def get_data(self,limit):
+        now=datetime.now()
+        comp_date = now - timedelta(minutes=1) #defines the interval of time of when to check
+        data=self.env['op.scheduled.tasks'].search([['write_date','<',comp_date,]],limit=limit)
+        return data
+
+    def cron_process_task(self, job_count=30):
+        tasks_to_process = self.search([('processed', '=', False)])
+        remaining_tasks = 
