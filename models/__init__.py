@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
 
-from . import openprojectbase
-from . import projectactivity
+from . import openproject_base
 from . import op_resconfig

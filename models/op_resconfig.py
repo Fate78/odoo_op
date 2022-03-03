@@ -10,7 +10,7 @@ class OpResConfigSettings(models.TransientModel):
         res = super(OpResConfigSettings, self).set_api_key()
         self.env['ir.config_parameter'].set_param('openproject.api_key', False)
         return res
-        
+
     @api.model
     def get_api_key(self):
         res = super(OpResConfigSettings, self).get_api_key()

@@ -4,7 +4,6 @@ openproject.access_op_user,access_op_user,openproject.model_op_user,base.group_u
 openproject.access_op_activity,access_op_activity,openproject.model_op_activity,base.group_user,1,1,1,1
 openproject.access_op_work_package,access_op_work_package,openproject.model_op_work_package,base.group_user,1,1,1,1
 openproject.access_op_time_entry,access_op_time_entry,openproject.model_op_time_entry,base.group_user,1,1,1,1
-openproject.access_op_project_activity,access_op_project_activity,openproject.model_op_project_activity,base.group_user,1,1,1,1
 openproject.access_sync_projects,access_sync_projects,openproject.model_sync_projects,base.group_user,1,1,1,1
 openproject.access_sync_workpackages,access_sync_workpackages,openproject.model_sync_workpackages,base.group_user,1,1,1,1
 openproject.access_op_project_version,access_op_project_version,openproject.model_op_project_version,base.group_user,1,1,1,1
