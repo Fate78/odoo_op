@@ -65,6 +65,7 @@ class SyncProjects(models.AbstractModel):
                                         'description': _description,
                                         'active': _active
                                     }
+                                    self.env.cr.savepoint()
                                     project_search_id.write(values)
                                 except NonStopException as e:
                                     _logger.error('Bypass Error: %s' % e)
@@ -87,10 +88,12 @@ class SyncProjects(models.AbstractModel):
                             'description': _description,
                             'active': _active
                         }
+                        self.env.cr.savepoint()
                         projects.create(values)
                     except Exception as e:
                         print("Exception has occurred: ", e)
                         print("Exception type: ", type(e))
+                        self.env.cr.rollback()
             self.env.cr.commit()
             print("All data committed")
             next_offset, response = env_project.check_next_offset(response)

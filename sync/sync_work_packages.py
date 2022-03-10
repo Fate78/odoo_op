@@ -81,6 +81,7 @@ class SyncWorkPackages(models.AbstractModel):
                                         'db_author_id': _author_id,
                                         'db_responsible_id': _responsible_id
                                     }
+                                    self.env.cr.savepoint()
                                     work_package_search_id.write(values)
                                 except NonStopException as e:
                                     _logger.error('Bypass Error: %s' % e)
@@ -103,10 +104,12 @@ class SyncWorkPackages(models.AbstractModel):
                             'db_author_id': _author_id,
                             'db_responsible_id': _responsible_id
                         }
+                        self.env.cr.savepoint()
                         work_packages.create(values)
                     except Exception as e:
                         print("Exception has occurred: ", e)
                         print("Exception type: ", type(e))
+                        self.env.cr.rollback()
             next_offset_wp, response_work_package = env_work_package.check_next_offset(response_work_package)
             # check if wp next_offset exists
             self.env.cr.commit()

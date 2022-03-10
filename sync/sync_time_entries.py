@@ -78,6 +78,7 @@ class SyncTimeEntries(models.AbstractModel):
                                         'op_spent_on': _spentOn_date,
                                         'comment': _comment
                                     }
+                                    self.env.cr.savepoint()
                                     time_entry_search_id.write(values)
                                 except NonStopException as e:
                                     _logger.error('Bypass Error: %s' % e)
@@ -102,10 +103,12 @@ class SyncTimeEntries(models.AbstractModel):
                             'op_spent_on': _spentOn_date,
                             'comment': _comment
                         }
+                        self.env.cr.savepoint()
                         time_entries.create(values)
                     except Exception as e:
                         print("Exception has occurred: ", e)
                         print("Exception type: ", type(e))
+                        self.env.cr.rollback()
             self.env.cr.commit()
             print("All data committed")
             next_offset, response = env_time_entry.check_next_offset(response)

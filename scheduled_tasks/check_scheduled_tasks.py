@@ -6,10 +6,9 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
-"""Posts work packages on a schedule according to a frequency and interval"""
-
 
 class PostWorkPackages(models.AbstractModel):
+    """Posts work packages on a schedule according to a frequency and interval """
     _name = 'check.schedules'
     _description = 'Check Schedules'
     limit = 20
@@ -126,9 +125,11 @@ class PostWorkPackages(models.AbstractModel):
                         try:
                             print("Going for a run")
                             self.post_scheduled_task(t_name, t_description, t_project)
+                            self.env.cr.savepoint()
                             tasks.write(values)
                         except Exception as e:
                             _logger.error('Error: %s' % e)
+                            self.env.cr.rollback()
 
                 elif t_frequency == "weekly":
                     next_run_date = t_write_date_test + relativedelta(weeks=+t_interval)
@@ -141,9 +142,11 @@ class PostWorkPackages(models.AbstractModel):
                         try:
                             print("Going for a run")
                             self.post_scheduled_task(t_name, t_description, t_project)
+                            self.env.cr.savepoint()
                             tasks.write(values)
                         except Exception as e:
                             _logger.error('Error: %s' % e)
+                            self.env.cr.rollback()
 
                 elif t_frequency == "monthly":
                     next_run_date = t_write_date_test + relativedelta(months=+t_interval)
@@ -156,6 +159,10 @@ class PostWorkPackages(models.AbstractModel):
                         try:
                             print("Going for a run")
                             self.post_scheduled_task(t_name, t_description, t_project)
+                            self.env.cr.savepoint()
                             tasks.write(values)
                         except Exception as e:
                             _logger.error('Error: %s' % e)
+                            self.env.cr.rollback()
+
+                self.env.cr.commit()

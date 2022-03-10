@@ -11,6 +11,7 @@ class OpenProjectBaseMethods(models.AbstractModel):
     _description = "Abstract Model for methods"
 
     base_path = "http://localhost:3000"
+    filters = "?filters=[]&offset=1&pageSize=20"
 
     # Searches the database of a model for data that hasn't been updated in a certain time
     def get_data_to_update(self, model, limit):
@@ -72,14 +73,16 @@ class OpenProjectBaseMethods(models.AbstractModel):
 
     def get_projects_url(self):
         base_path = self.base_path
+        filters = self.filters
         endpoint_url = "/api/v3/projects/"
-        main_url = "%s%s" % (base_path, endpoint_url)
+        main_url = "%s%s%s" % (base_path, endpoint_url, filters)
         return main_url
 
     def get_project_url(self, project_id):
         base_path = self.base_path
+        filters = self.filters
         endpoint_url = "/api/v3/projects/%s" % project_id
-        main_url = "%s%s" % (base_path, endpoint_url)
+        main_url = "%s%s%s" % (base_path, endpoint_url, filters)
         return main_url
 
     def check_next_offset(self, response):
@@ -150,8 +153,9 @@ class User(models.Model):
     # return the api url for the users
     def get_users_url(self):
         base_path = self.base_path
+        filters = self.filters
         endpoint_url = "/api/v3/users/"
-        main_url = "%s%s" % (base_path, endpoint_url)
+        main_url = "%s%s%s" % (base_path, endpoint_url, filters)
         return main_url
 
 
@@ -165,8 +169,9 @@ class Activity(models.Model):
 
     def get_activities_url(self, _id):
         base_path = self.base_path
+        filters = self.filters
         endpoint_url = "/api/v3/time_entries/activities/%s" % _id
-        main_url = "%s%s" % (base_path, endpoint_url)
+        main_url = "%s%s%s" % (base_path, endpoint_url, filters)
         return main_url
 
 
@@ -189,15 +194,17 @@ class WorkPackage(models.Model):
 
     def get_project_workpackages_url(self, project):
         base_path = self.base_path
+        filters = self.filters
         endpoint_url = "/api/v3/projects/%s/work_packages" % project
 
-        return "%s%s" % (base_path, endpoint_url)
+        return "%s%s%s" % (base_path, endpoint_url, filters)
 
     def get_workpackages_url(self):
         base_path = self.base_path
+        filters = self.filters
         endpoint_url = "/api/v3/work_packages"
 
-        return "%s%s" % (base_path, endpoint_url)
+        return "%s%s%s" % (base_path, endpoint_url, filters)
 
     @staticmethod
     def get_payload(project_id, responsible_id, subject, description, start_date):
@@ -268,9 +275,10 @@ class TimeEntries(models.Model):
 
     def get_time_entries_url(self):
         base_path = self.base_path
+        filters = self.filters
         endpoint_url = "/api/v3/time_entries"
 
-        return "%s%s" % (base_path, endpoint_url)
+        return "%s%s%s" % (base_path, endpoint_url, filters)
 
 
 class Versions(models.Model):
@@ -287,15 +295,17 @@ class Versions(models.Model):
 
     def get_project_versions_url(self, project):
         base_path = self.base_path
+        filters = self.filters
         endpoint_url = "/api/v3/projects/%s/versions" % project
 
-        return "%s%s" % (base_path, endpoint_url)
+        return "%s%s%s" % (base_path, endpoint_url, filters)
 
     def get_versions_url(self):
         base_path = self.base_path
+        filters = self.filters
         endpoint_url = "/api/v3/versions"
 
-        return "%s%s" % (base_path, endpoint_url)
+        return "%s%s%s" % (base_path, endpoint_url, filters)
 
 
 class ScheduledTasks(models.Model):
@@ -315,16 +325,12 @@ class ScheduledTasks(models.Model):
                                default=True)
     write_date_test = fields.Datetime(string='Write Date Test', readonly=False, required=True,
                                       default=fields.Datetime.now)
-    processed = fields.Boolean('Processed', help='Has the cron processed this Task?', readonly=True, required=False,
-                               default=False)
     """TODO:
-        Add a Due_Date """
+        Add a Due_Date 
+        Add Processed field to use _trigger"""
 
     def get_data(self, limit):
         now = datetime.now()
         comp_date = now - timedelta(minutes=1)  # defines the interval of time of when to check
         data = self.env['op.scheduled.tasks'].search([['write_date', '<', comp_date, ]], limit=limit)
         return data
-
-    def cron_process_task(self, job_count=30):
-        tasks_to_process = self.search([('processed', '=', False)])

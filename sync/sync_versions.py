@@ -61,6 +61,7 @@ class SyncVersions(models.AbstractModel):
                                             'description': _description,
                                             'status': _status
                                         }
+                                        self.env.cr.savepoint()
                                         version_search_id.write(values)
                                     except NonStopException as e:
                                         _logger.error('Bypass Error: %s' % e)
@@ -81,10 +82,12 @@ class SyncVersions(models.AbstractModel):
                                 'description': _description,
                                 'status': _status
                             }
+                            self.env.cr.savepoint()
                             versions.create(values)
                         except Exception as e:
                             print("Exception has occurred: ", e)
                             print("Exception type: ", type(e))
+                            self.env.cr.rollback()
             else:
                 print("Permission denied to project %d" % _id_project)
             next_offset, response_ver = env_version.check_next_offset(response_ver)

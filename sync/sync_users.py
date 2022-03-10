@@ -55,6 +55,7 @@ class SyncUsers(models.AbstractModel):
                                         'email': _email,
                                         'admin': _admin
                                     }
+                                    self.env.cr.savepoint()
                                     user_search_id.write(values)
                                 except NonStopException as e:
                                     _logger.error('Bypass Error: %s' % e)
@@ -77,10 +78,12 @@ class SyncUsers(models.AbstractModel):
                             'email': _email,
                             'admin': _admin
                         }
+                        self.env.cr.savepoint()
                         users.create(values)
                     except Exception as e:
                         print("Exception has occurred: ", e)
                         print("Exception type: ", type(e))
+                        self.env.cr.rollback()
             self.env.cr.commit()
             print("All data committed")
             next_offset, response = env_user.check_next_offset(response)
