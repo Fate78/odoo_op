@@ -1,13 +1,7 @@
-from requests.models import HTTPBasicAuth
-from odoo import models, fields, api
-from odoo.exceptions import UserError
+from odoo import models
 import requests
 import json
 import hashlib
-from base64 import b64encode
-from pprint import pprint
-from datetime import datetime
-from dateutil import parser
 
 
 class UpdateWorkPackages(models.TransientModel):
@@ -19,15 +13,17 @@ class UpdateWorkPackages(models.TransientModel):
         'content-type': 'application/json'
     }
 
-    def get_main_url(self,project_id):
-            base_path = "http://localhost:3000"
-            endpoint_url = "/api/v3/projects/%s/work_packages"%project_id
-            main_url="%s%s" % (base_path, endpoint_url)
-            return main_url
+    @staticmethod
+    def get_main_url(project_id):
+        base_path = "http://localhost:3000"
+        endpoint_url = "/api/v3/projects/%s/work_packages" % project_id
+        main_url = "%s%s" % (base_path, endpoint_url)
+        return main_url
 
-    def get_payload(self,project_id,id):
+    @staticmethod
+    def get_payload(project_id, id):
         payload = {
-            "subject": "updated%s"%id,
+            "subject": "updated%s" % id,
             "description": {
                 "format": "markdown",
                 "raw": None,
@@ -52,7 +48,7 @@ class UpdateWorkPackages(models.TransientModel):
                     "title": "Normal"
                 },
                 "project": {
-                    "href": "/api/v3/projects/%s"%project_id,
+                    "href": "/api/v3/projects/%s" % project_id,
                     "title": "project1"
                 },
                 "status": {
@@ -94,13 +90,13 @@ class UpdateWorkPackages(models.TransientModel):
 
     def cron_update_work_packages(self):
         try:
-            for p in range(1821,1830):
+            for p in range(1821, 1830):
                 main_url = self.get_main_url(p)
                 print(p)
-                print("main_url: ",main_url)
-                for id in range(1,5):
-                    response = self.patch_response(main_url, self.get_payload(p,id))
+                print("main_url: ", main_url)
+                for id in range(1, 5):
+                    response = self.patch_response(main_url, self.get_payload(p, id))
                     print(response)
         except Exception as e:
-            print("Exception has ocurred: ", e)
+            print("Exception has occurred: ", e)
             print("Exception type: ", type(e))

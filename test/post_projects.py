@@ -1,8 +1,7 @@
-from requests.models import HTTPBasicAuth
-from odoo import models, fields, api
-from odoo.exceptions import UserError
+from odoo import models
 import requests
 import json
+
 
 class PostProjects(models.TransientModel):
     _name = 'post.projects'
@@ -13,30 +12,31 @@ class PostProjects(models.TransientModel):
         'content-type': 'application/json'
     }
 
-    def get_payload(self,id):
+    @staticmethod
+    def get_payload(id):
         payload = {
-            "identifier": "project0%s"%(id),
-            "name": "project0%s"%(id),
+            "identifier": "project0%s" % id,
+            "name": "project0%s" % id,
             "active": True,
             "public": False,
             "description": {
                 "format": "markdown",
                 "raw": None,
                 "html": ""
-                    },
+            },
             "statusExplanation": {
-                        "format": "markdown",
-                        "raw": None,
-                        "html": ""
-                    },
+                "format": "markdown",
+                "raw": None,
+                "html": ""
+            },
             "_links": {
-                        "parent": {
-                            "href": None
-                        },
-                        "status": {
-                            "href": None
-                        }
-                    }
+                "parent": {
+                    "href": None
+                },
+                "status": {
+                    "href": None
+                }
+            }
         }
         return payload
 
@@ -61,9 +61,9 @@ class PostProjects(models.TransientModel):
         main_url = "%s%s" % (self.base_path, self.endpoint_url)
 
         try:
-            for id in range(1,30):
+            for id in range(1, 30):
                 response = self.post_response(main_url, self.get_payload(id))
                 print(response)
         except Exception as e:
-            print("Exception has ocurred: ", e)
+            print("Exception has occurred: ", e)
             print("Exception type: ", type(e))

@@ -1,13 +1,7 @@
-from requests.models import HTTPBasicAuth
-from odoo import models, fields, api
-from odoo.exceptions import UserError
+from odoo import models
 import requests
 import json
 import hashlib
-from base64 import b64encode
-from pprint import pprint
-from datetime import datetime
-from dateutil import parser
 import random
 
 
@@ -22,8 +16,9 @@ class UpdateTimeEntries(models.TransientModel):
         'content-type': 'application/json'
     }
 
-    def get_payload(self,project,work_package,activity):
-        payload= {
+    @staticmethod
+    def get_payload(project, work_package, activity):
+        payload = {
             "comment": {
                 "format": "plain",
                 "raw": None,
@@ -33,13 +28,13 @@ class UpdateTimeEntries(models.TransientModel):
             "hours": "PT1H",
             "_links": {
                 "project": {
-                    "href": "/api/v3/projects/%s"%project,
+                    "href": "/api/v3/projects/%s" % project,
                 },
                 "workPackage": {
-                    "href": "/api/v3/work_packages/%s"%work_package,
+                    "href": "/api/v3/work_packages/%s" % work_package,
                 },
                 "activity": {
-                    "href": "/api/v3/time_entries/activities/%s"%activity,
+                    "href": "/api/v3/time_entries/activities/%s" % activity,
                 }
             }
         }
@@ -64,12 +59,12 @@ class UpdateTimeEntries(models.TransientModel):
 
     def cron_update_time_entries(self):
         try:
-            for id in range(1,21):
-                project = random.randint(1821,1829)
-                work_package = random.randint(34,53)
-                activity = random.randint(1,4)
+            for id in range(1, 21):
+                project = random.randint(1821, 1829)
+                work_package = random.randint(34, 53)
+                activity = random.randint(1, 4)
                 main_url = "%s%s/%s" % (self.base_path, self.endpoint_url, id)
-                response = self.patch_response(main_url, self.get_payload(project,work_package,activity))
+                response = self.patch_response(main_url, self.get_payload(project, work_package, activity))
         except Exception as e:
-            print("Exception has ocurred: ", e)
+            print("Exception has occurred: ", e)
             print("Exception type: ", type(e))

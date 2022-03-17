@@ -1,6 +1,4 @@
-from requests.models import HTTPBasicAuth
-from odoo import models, fields, api
-from odoo.exceptions import UserError
+from odoo import models
 import requests
 import json
 
@@ -14,32 +12,33 @@ class UpdateProjects(models.TransientModel):
         'content-type': 'application/json'
     }
 
-    def get_payload(self,id):
+    @staticmethod
+    def get_payload(id):
         payload = {
-                "lockVersion": 1,
-                "identifier": "finalproject%s"%(id),
-                "name": "finalproject%s"%(id),
-                "active": True,
-                "public": False,
-                "description": {
-                        "format": "markdown",
-                        "raw": None,
-                        "html": ""
+            "lockVersion": 1,
+            "identifier": "finalproject%s" % id,
+            "name": "finalproject%s" % id,
+            "active": True,
+            "public": False,
+            "description": {
+                "format": "markdown",
+                "raw": None,
+                "html": ""
+            },
+            "statusExplanation": {
+                "format": "markdown",
+                "raw": None,
+                "html": ""
+            },
+            "_links": {
+                "parent": {
+                    "href": None
                 },
-                "statusExplanation": {
-                    "format": "markdown",
-                    "raw": None,
-                    "html": ""
-                },
-                "_links": {
-                    "parent": {
-                        "href": None
-                    },
-                    "status": {
-                        "href": None
-                    }
+                "status": {
+                    "href": None
                 }
-}
+            }
+        }
         return payload
 
     def get_api_key(self):
@@ -60,9 +59,9 @@ class UpdateProjects(models.TransientModel):
 
     def cron_update_projects(self):
         try:
-            for id in range(0,200):
+            for id in range(0, 200):
                 main_url = "%s%s/%s" % (self.base_path, self.endpoint_url, id)
                 response = self.patch_response(main_url, self.get_payload(id))
         except Exception as e:
-            print("Exception has ocurred: ", e)
+            print("Exception has occurred: ", e)
             print("Exception type: ", type(e))

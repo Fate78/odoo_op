@@ -325,9 +325,6 @@ class ScheduledTasks(models.Model):
                                default=True)
     write_date_test = fields.Datetime(string='Write Date Test', readonly=False, required=True,
                                       default=fields.Datetime.now)
-    """TODO:
-        Add a Due_Date 
-        Add Processed field to use _trigger"""
 
     def get_data(self, limit):
         now = datetime.now()

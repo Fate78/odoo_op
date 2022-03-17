@@ -1,6 +1,5 @@
 from requests.models import HTTPBasicAuth
-from odoo import models, fields, api
-from odoo.exceptions import UserError
+from odoo import models, fields, api, exceptions
 import requests
 import json
 
@@ -14,7 +13,8 @@ class PostTimeEntries(models.TransientModel):
         'content-type': 'application/json'
     }
 
-    def get_payload(self,id):
+    @staticmethod
+    def get_payload(id):
         payload = {
             "comment": {
                 "format": "plain",
@@ -58,9 +58,9 @@ class PostTimeEntries(models.TransientModel):
 
         main_url = "%s%s" % (self.base_path, self.endpoint_url)
         try:
-            for id in range(1,10):
+            for id in range(1, 10):
                 response = self.post_response(main_url, self.get_payload(id))
                 print(response)
         except Exception as e:
-            print("Exception has ocurred: ", e)
+            print("Exception has occurred: ", e)
             print("Exception type: ", type(e))
