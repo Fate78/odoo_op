@@ -16,8 +16,8 @@ class UpdateProjects(models.TransientModel):
     def get_payload(id):
         payload = {
             "lockVersion": 1,
-            "identifier": "finalproject%s" % id,
-            "name": "finalproject%s" % id,
+            "identifier": "updatedproject%s" % id,
+            "name": "updatedproject%s" % id,
             "active": True,
             "public": False,
             "description": {
@@ -59,7 +59,7 @@ class UpdateProjects(models.TransientModel):
 
     def cron_update_projects(self):
         try:
-            for id in range(0, 200):
+            for id in range(1821, 1858):
                 main_url = "%s%s/%s" % (self.base_path, self.endpoint_url, id)
                 response = self.patch_response(main_url, self.get_payload(id))
         except Exception as e:

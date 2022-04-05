@@ -94,7 +94,7 @@ class SyncWorkPackages(models.AbstractModel):
                                 work_package_search_id.write({'write_date': datetime.now()})
                 else:
                     try:
-                        print("Creating work package...\n")
+                        print("Creating work package: %s\n" % _id)
                         values = {
                             'db_id': _id,
                             'db_project_id': _id_project,

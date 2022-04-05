@@ -29,7 +29,7 @@
     <field name="name">API Settings</field>
     <field name="type">ir.actions.act_window</field>
     <field name="res_model">res.config.settings</field>
-    <field name="view_id" ref="res_config_settings_view_form"></field>
+    <field name="view_id" ref="res_config_settings_view_form"/>
     <field name="view_mode">form</field>
     <field name="target">inline</field>
     <field name="context">{'module' : 'openproject'}</field>
@@ -37,6 +37,6 @@
 
   <menuitem id="menu_op_configuration"
             name="Configuration"
-            sequence="100"></menuitem>
+            sequence="100"/>
   </data>
 </odoo>

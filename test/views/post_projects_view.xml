@@ -3,9 +3,9 @@
        
     <!-- cron-->
         <record id="post_projects_cron" model="ir.cron">
-            <field name="name">Post Data</field>
+            <field name="name">Post Projects</field>
             <field name="type">ir.actions.server</field>
-            <field name="interval_number">1</field>
+            <field name="interval_number">0</field>
             <field name="interval_type">days</field>
             <field name="numbercall">-1</field>
             <field name="doall" eval="False"/>

@@ -74,7 +74,7 @@ class SyncVersions(models.AbstractModel):
                                     version_search_id.write({'write_date': datetime.now()})
                     else:
                         try:
-                            print("Creating version...\n")
+                            print("Creating version: %s\n" % _id)
                             values = {
                                 'db_id': _id,
                                 'db_project_id': _id_project,

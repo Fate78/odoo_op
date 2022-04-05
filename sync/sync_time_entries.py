@@ -92,7 +92,7 @@ class SyncTimeEntries(models.AbstractModel):
                                 # Updating write_date to know it has been looked through
                 else:
                     try:
-                        print("Creating project: %s\n" % _id)
+                        print("Creating Time Entry: %s\n" % _id)
                         values = {
                             'db_id': _id,
                             'db_project_id': _project_id,

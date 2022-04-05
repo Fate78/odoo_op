@@ -39,12 +39,12 @@
         'sync/views/sync_time_entries_view.xml',
         'sync/views/sync_users_view.xml',
         'scheduled_tasks/views/check_scheduled_tasks_view.xml',
-        # 'test/views/post_projects_view.xml',
-        # 'test/views/update_projects_view.xml',
-        # 'test/views/post_work_packages_view.xml',
-        # 'test/views/update_work_packages_view.xml',
-        # 'test/views/post_time_entries_view.xml',
-        # 'test/views/update_time_entries_view.xml',
+        'test/views/post_projects_view.xml',
+        'test/views/update_projects_view.xml',
+        'test/views/post_work_packages_view.xml',
+        'test/views/update_work_packages_view.xml',
+        'test/views/post_time_entries_view.xml',
+        'test/views/update_time_entries_view.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
